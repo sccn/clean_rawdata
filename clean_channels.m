@@ -109,8 +109,11 @@ locs = [cell2mat(x(usable_channels));cell2mat(y(usable_channels));cell2mat(z(usa
 X = X(:,usable_channels);
   
 % caculate all-channel reconstruction matrices from random channel subsets   
-P = calc_projector(locs,num_samples,subset_size);
-%P = hlp_microcache('cleanchans',@calc_projector,locs,num_samples,subset_size);
+if exist('OCTAVE_VERSION', 'builtin') == 0
+    P = hlp_microcache('cleanchans',@calc_projector,locs,num_samples,subset_size);
+else
+    P = calc_projector(locs,num_samples,subset_size);
+end
 corrs = zeros(length(usable_channels),W);
         
 % calculate each channel's correlation to its RANSAC reconstruction for each window
