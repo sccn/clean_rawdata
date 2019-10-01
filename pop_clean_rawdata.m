@@ -4,47 +4,6 @@
 % Usage:
 %   >>  EEG = pop_clean_rawdata(EEG);
 %
-% ------------------ below is from clean_artifacts (modified)-----------------------
-%
-% This function removes flatline channels, low-frequency drifts, noisy channels, short-time bursts
-% and incompletely repaird segments from the data. Tip: Any of the core parameters can also be
-% passed in as [] to use the respective default of the underlying functions, or as 'off' to disable
-% it entirely.
-%
-% Hopefully parameter tuning should be the exception when using this function -- however, there are
-% 3 parameters governing how aggressively bad channels, bursts, and irrecoverable time windows are
-% being removed, plus several detail parameters that only need tuning under special circumstances.
-%
-%   FlatChannel:       Maximum tolerated flatline duration. In seconds. If a channel has a longer
-%                      flatline than this, it will be considered abnormal. Default: 5
-%
-%   Highpass :         Transition band for the initial high-pass filter in Hz. This is formatted as
-%                      [transition-start, transition-end]. Default: [0.25 0.75].
-%
-%   PoorCorrelationChannel : Correlation threshold. If a channel is correlated at less than this value
-%                            to its robust estimate (based on other channels), it is considered abnormal in
-%                            the given time window. Default: 0.8.
-%
-%   LineNoiseChannel:  If a channel has more line noise relative to its signal than this value, in
-%                      standard deviations from the channel population mean, it is considered abnormal.
-%                      Default: 4.
-%
-%   BurstCriterion : Standard deviation cutoff for removal of bursts (via ASR). Data portions whose
-%                    variance is larger than this threshold relative to the calibration data are
-%                    considered missing data and will be removed. The most aggressive value that can
-%                    be used without losing much EEG is 3. For new users it is recommended to at
-%                    first visually inspect the difference between the original and cleaned data to
-%                    get a sense of the removed content at various levels. A quite conservative
-%                    value is 5. Default: 5.
-%
-%   WindowCriterion :  Criterion for removing time windows that were not repaired completely. This may
-%                      happen if the artifact in a window was composed of too many simultaneous
-%                      uncorrelated sources (for example, extreme movements such as jumps). This is
-%                      the maximum fraction of contaminated channels that are tolerated in the final
-%                      output data for each considered window. Generally a lower value makes the
-%                      criterion more aggressive. Default: 0.5. Reasonable range: 0.05 (very
-%                      aggressive) to 0.3 (very lax).
-%
 % see also: clean_artifacts
 
 % Author: Makoto Miyakoshi and Christian Kothe, SCCN,INC,UCSD
@@ -73,67 +32,91 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [EEG,com] = pop_clean_rawdata(EEG)
+function [EEG,com] = pop_clean_rawdata(EEG, varargin)
 
-% Check input.
+% Check input
+com = '';
 if size(EEG(1).data) == 3
     error('Input data must be continuous. This data seems epoched.')
 end
 
-% Obtain user inputs.
-%geom = { [1 0.5] [1 0.5] [1 0.5] [1 0.5] [1 0.5] [1 0.5] [1 0.5] };
-userInput = inputgui('title', 'pop_clean_rawdata()', 'geom', ...
-   {{2 7 [0 0] [1 1]}   {2 7 [1 0] [1 1]} ...
-    {2 7 [0 1] [1 1]}   {2 7 [1 1] [1 1]} ...
-    {2 7 [0 2] [1 1]}   {2 7 [1 2] [1 1]} ...
-    {2 7 [0 3] [1 1]}   {2 7 [1 3] [1 1]} ...
-    {2 7 [0 4] [1 1]}   {2 7 [1 4] [1 1]} ...
-    {2 7 [0 5] [1 1]}   {2 7 [1 5] [1 1]} ...
-    {2 7 [0 6] [1 1]}   {2 7 [1 6] [1 1]} ... 
-    {6 7 [0 9] [1 1]}},...
-'uilist',...
-   {{'style' 'text' 'string' 'Remove channel if flat more than [sec|-1->off]'} ...
-    {'style' 'edit' 'string' '5','tooltipstring', wordwrap('If a channel has a longer flatline than this, it will be removed. In seconds.',80)} ...
-    ...
-    {'style' 'text' 'string' 'High-pass filt tran band width [F1 F2|-1->off]'} ...
-    {'style' 'edit' 'string' '0.25 0.75','tooltipstring', wordwrap('The first number is the frequency below which everything is removed, and the second number is the frequency above which everything is retained. There is a linear transition in between. For best performance of subsequent processing steps the upper frequency should be close to 1 or 2 Hz, but you can go lower if certain activities need to be retained.',80)} ...
-    ...
-    {'style' 'text' 'string' 'Remove poorly correlated channels [0-1|-1->off]'} ...
-    {'style' 'edit' 'string' '0.8', 'tooltipstring', wordwrap('If a channel has lower correlation than this to an estimate of its activity based on other channels, and this applies to more than half of the recording, the channel will be removed. This method requires that channel locations are available and roughly correct; otherwise a fallback criterion will tried used using a default setting; you can customize the fallback method by directly calling clean_channels_nolocs in the command line.',80)} ...
-    ...
-    {'style' 'text' 'string' 'Remove line-noisy channels [std|-1->off]'} ...
-    {'style' 'edit' 'string' '4', 'tooltipstring', wordwrap('If a channel has more line noise relative to its signal than this value, in standard deviations relative to the overall channel population, it will be removed.',80)} ...
-    ...
-    {'style' 'text' 'string' 'Repair bursts using ASR [std|-1->off]'} ...
-    {'style' 'edit' 'string' '5','tooltipstring', wordwrap('Standard deviation cutoff for removal of bursts. Data portions whose variance is larger than this threshold relative to the calibration data are considered missing data and will be removed. The most aggressive value that can be used without losing much EEG is 3. A reasonably conservative value is 5, but some extreme EEG bursts (e.g., sleep spindles) can cross even 5. For new users it is recommended to at first visually inspect the difference between the original and cleaned data to get a sense of the removed content at various levels.',80)} ...
-    ...
-    {'style' 'text' 'string' 'Remove time windows [0-1|''off'']'} ...
-    {'style' 'edit' 'string' '0.5','tooltipstring', wordwrap('If a time window has a larger fraction of simultaneously corrupted channels than this (after the other cleaning attempts), it will be cut out of the data. This can happen if a time window was corrupted beyond the point where it could be recovered.',80)} ...
-    ...
-    {'style' 'text' 'string' 'Show results for comparison? (beta version)'} ...
-    {'style' 'popupmenu' 'string' { 'Yes' 'No' } 'value' fastif(length(EEG) > 1, 2, 1) 'enable' fastif(length(EEG) > 1, 'off', 'on') }...
-    ...
-    {'style', 'pushbutton', 'string', 'Help', 'callback', 'pophelp(''pop_clean_rawdata'');'}});
+if nargin < 2
+    % Obtain user inputs.
+    cb_filter = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''filter''), ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''filter''), ''enable'', ''off''); end';
+    cb_chan   = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''chan'')  , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''chan'')  , ''enable'', ''off''); end';
+    cb_asr    = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''asr'')   , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''asr'')   , ''enable'', ''off''); end';
+    cb_asrrej = 'if get(gcbo, ''value''), set(findobj(gcbf, ''tag'', ''asrwinval'')   , ''enable'', ''on''); set(findobj(gcbf, ''tag'', ''asrwintext'')   , ''enable'', ''on''); else set(findobj(gcbf, ''tag'', ''asrwinval'')   , ''enable'', ''off''); set(findobj(gcbf, ''tag'', ''asrwintext'')   , ''enable'', ''off''); end';
+    uilist =    {...
+        {'style' 'checkbox' 'string' 'If data were not high pass filtered: remove channel drift' 'fontweight' 'bold' 'tag' 'filter' 'callback' cb_filter} ...
+        {} {'style' 'text' 'string' 'Filter transition band, [lo hi] Hz                                  ' 'userdata' 'filter' 'enable' 'off' } ...
+        {'style' 'edit' 'string' '0.25 0.75', 'enable' 'off' 'tag','filterfreqs', 'userdata' 'filter' 'tooltipstring', wordwrap('The first number is the frequency below which everything is removed, and the second number is the frequency above which everything is retained. There is a linear transition in between. For best performance of subsequent processing steps the upper frequency should be close to 1 or 2 Hz, but you can go lower if certain activities need to be retained.',80)} ...
+        ...
+        {} {'style' 'checkbox' 'string' 'Remove bad channels' 'fontweight' 'bold' 'tag' 'chanrm' 'callback' cb_chan 'value' 1 } ...
+        {} {'style' 'checkbox' 'string' 'Remove channel if flat for more than (seconds)' 'tag' 'rmflat' 'userdata' 'chan' 'value' 1 } ...
+        {'style' 'edit' 'string' '5', 'userdata' 'chan' 'tag' 'rmflatsec' 'tooltipstring', wordwrap('If a channel has a longer flatline than this, it will be removed. In seconds.',80)} ...
+        ...
+        {} {'style' 'checkbox' 'string' 'Maximum acceptable std. dev. (uV)' 'value' 1 'tag' 'rmnoise' 'userdata' 'chan' } ...
+        {'style' 'edit' 'string' '4',  'userdata' 'chan' 'tag' 'rmnoiseval' 'tooltipstring', wordwrap('If a channel has more line noise relative to its signal than this value, in standard deviations relative to the overall channel population, it will be removed.',80)} ...
+        ...
+        {} {'style' 'checkbox' 'string' 'Minimum correlation with nearby chans' 'value' 1 'tag' 'rmcorr' 'userdata' 'chan'   } ...
+        {'style' 'edit' 'string' '0.8', 'userdata' 'chan'  'tag' 'rmcorrval'  'tooltipstring', wordwrap('If a channel has lower correlation than this to an estimate of its activity based on other channels, and this applies to more than half of the recording, the channel will be removed. This method requires that channel locations are available and roughly correct; otherwise a fallback criterion will tried used using a default setting; you can customize the fallback method by directly calling clean_channels_nolocs in the command line.',80)} ...
+        ...
+        {} {'style' 'checkbox' 'string' 'Perform ASR bad burst removal or correction' 'fontweight' 'bold' 'value' 1 'tag' 'asr' 'callback' cb_asr } ...
+        {} {'style' 'text' 'string' 'Max acceptable std. dev. (uV)' 'value' 1  'userdata' 'asr' } ...
+        {'style' 'edit' 'string' '5', 'tag' 'asrstdval' 'userdata' 'asr' 'tooltipstring', wordwrap('Standard deviation cutoff for removal of bursts. Data portions whose variance is larger than this threshold relative to the calibration data are considered missing data and will be removed. The most aggressive value that can be used without losing much EEG is 3. A reasonably conservative value is 5, but some extreme EEG bursts (e.g., sleep spindles) can cross even 5. For new users it is recommended to at first visually inspect the difference between the original and cleaned data to get a sense of the removed content at various levels.',80)} ...
+        ...
+        {} {'style' 'checkbox' 'string' 'Use Riemanian distance metric (not Euclidean)' 'userdata' 'asr' 'value' 0 'tag' 'distance' } {} ...
+        ...
+        {} {'style' 'checkbox' 'string' 'Check to correct bad windows instead of rejecting them' 'userdata' 'asr' 'value' 1 'tag' 'asrwin' 'callback' cb_asrrej }  {} ...
+        {} {'style' 'text' 'tag' 'asrwintext' 'string' '               Maximum bad channels to correct (%)'  'userdata' 'asr'} ...
+        {'style' 'edit' 'string' '0.5','tag', 'asrwinval', 'userdata' 'asr' 'tooltipstring', wordwrap('If a time window has a larger fraction of simultaneously corrupted channels than this (after the other cleaning attempts), it will be cut out of the data. This can happen if a time window was corrupted beyond the point where it could be recovered.',80)} ...
+        ...
+        {} {'style' 'checkbox' 'string' 'Pop up window to scroll data with rejected portions highlighted' 'tag' 'vis' 'value' fastif(length(EEG) > 1, 2, 1) 'enable' fastif(length(EEG) > 1, 'off', 'on') }};
 
-% Return error if no input.
-if isempty(userInput)
-    return;
+    row   = [0.1 1 0.3];
+    row2  = [0.1 1.2 0.1];
+    geom =     { 1 row 1   1 row row row 1   1 row row2 row2 row 1 1 };
+    geomvert = [ 1 1       0.3 1 1       1       1       0.3 1 1       1       1   1       0.3 1 ];
+    [res,~,~,outs] = inputgui('title', 'pop_clean_rawdata()', 'geomvert', geomvert, 'geometry', geom, 'uilist',uilist, 'helpcom', 'pophelp(''clean_artifacts'');');
+
+    % Return error if no input.
+    if isempty(res) return; end
+
+    % process multiple datasets
+    % -------------------------
+    options = {};
+    opt.FlatlineCriterion  = 'off';
+    opt.ChannelCriterion   = 'off';
+    opt.LineNoiseCriterion = 'off';
+    opt.Highpass           = 'off';
+    opt.BurstCriterion     = 'off';
+    opt.WindowCriterion    = 'off';
+    opt.Distance           = 'Euclidian';
+    
+    if outs.filter, opt.Highpass = str2num(outs.filterfreqs); end
+    
+    if outs.chanrm
+        if outs.rmflat, opt.FlatlineCriterion = str2num(outs.rmflatsec); end
+        if outs.rmcorr, opt.ChannelCriterion  = str2num(outs.rmcorrval); end
+        if outs.rmnoise, opt.LineNoiseCriterion = str2num(outs.rmnoiseval); end
+    end
+    
+    if outs.asr,     opt.BurstCriterion = str2num(outs.asrstdval); end
+    if ~outs.asrwin, opt.WindowCriterion = 0; opt.WindowCriterionTolerances = [-Inf 5.5]; else opt.WindowCriterion = str2num(outs.asrwinval); end
+    if outs.distance,  opt.Distance = 'Riemannian'; end
+    
+    % convert structure to cell
+    options = fieldnames(opt);
+    options(:,2) = struct2cell(opt);
+    options = options';
+    options = options(:)';
+else
+    options = varargin;
 end
 
-% Convert user inputs into numerical variables.
-arg_flatline = str2num(userInput{1,1}); %#ok<*ST2NM>
-arg_highpass = str2num(userInput{1,2});
-arg_channel  = str2num(userInput{1,3});
-arg_noisy    = str2num(userInput{1,4});
-arg_burst    = str2num(userInput{1,5});
-arg_window   = str2num(userInput{1,6});
-arg_visartfc = userInput{1,7};
-
-% Apply Christian's functions
-% process multiple datasets
-% -------------------------
 if length(EEG) > 1
-    [ EEG, com ] = eeg_eval( 'clean_rawdata', EEG, 'warning', 'on', 'params', { arg_flatline arg_highpass arg_channel arg_noisy arg_burst arg_window } );
+    % process multiple datasets
+    [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'warning', 'on', 'params', options );
     return;
 end
 
@@ -147,10 +130,10 @@ if isfield(EEG.etc, 'clean_sample_mask')
     disp('EEG.etc.clean_sample_mask present: Deleted.')
 end
 
-cleanEEG = clean_rawdata(EEG, arg_flatline, arg_highpass, arg_channel, arg_noisy, arg_burst, arg_window);
-
+cleanEEG = clean_artifacts(EEG, options{:});
+                            
 % Apply Christian's function before and after comparison visualization.
-if arg_visartfc == 1
+if nargin < 2 && outs.vis == 1
     try
         vis_artifacts(cleanEEG,EEG);
     catch
@@ -162,7 +145,7 @@ end
 EEG = cleanEEG;
 
 % Output eegh.
-com = sprintf('EEG = clean_rawdata(EEG, %s, [%s], %s, %s, %s, %s);', userInput{1,1}, userInput{1,2}, userInput{1,3}, userInput{1,4}, userInput{1,5}, userInput{1,6});
+com = sprintf('EEG = clean_artifacts(EEG, %s);', vararg2str(options));
 
 % Display the ending message.
 disp('Done.')

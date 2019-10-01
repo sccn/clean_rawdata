@@ -96,7 +96,7 @@ function [EEG,HP,BUR] = clean_artifacts(EEG,varargin)
 %                                 bound). Together with the previous parameter this determines how
 %                                 ASR calibration data is be extracted from a recording. Can also be
 %                                 specified as 'off' to achieve the same effect as in the previous
-%                                 parameter. Default: [-3.5 5.5].
+%                                 parameter. Default: [-Inf 5.5].
 %
 %   WindowCriterionTolerances : These are the power tolerances outside of which a channel in the final
 %                               output data is considered "bad", in standard deviations relative
@@ -107,7 +107,7 @@ function [EEG,HP,BUR] = clean_artifacts(EEG,varargin)
 %                               repaired and will be removed from the output. This last stage can be
 %                               skipped either by setting the WindowCriterion to 'off' or by taking
 %                               the third output of this processing function (which does not include
-%                               the last stage). Default: [-3.5 7].
+%                               the last stage). Default: [-Inf 7].
 %
 %   FlatlineCriterion : Maximum tolerated flatline duration. In seconds. If a channel has a longer
 %                       flatline than this, it will be considered abnormal. Default: 5
@@ -181,20 +181,34 @@ hlp_varargin2struct(varargin,...
     {'channel_crit_maxbad_time','ChannelCriterionMaxBadTime'}, 0.5, ...
     {'burst_crit_refmaxbadchns','BurstCriterionRefMaxBadChns'}, 0.075, ...
     {'burst_crit_reftolerances','BurstCriterionRefTolerances'}, [-inf 5.5], ...
+    {'distance','Distance'}, 'euclidian', ...
     {'window_crit_tolerances','WindowCriterionTolerances'},[-inf 7], ...
     {'nolocs_channel_crit','NoLocsChannelCriterion'}, 0.45, ...
     {'nolocs_channel_crit_excluded','NoLocsChannelCriterionExcluded'}, 0.1, ...
     {'flatline_crit','FlatlineCriterion'}, 5);
 
+if ~strcmpi(distance, 'euclidian')
+    % old default
+    if isequal(burst_crit_reftolerances, [-inf 5.5])
+        burst_crit_reftolerances = [-3.5 5.5];
+    end
+    if isequal(burst_crit_reftolerances, [-inf 7])
+        window_crit_tolerances = [-3.5 7];
+    end
+end
+
 % remove flat-line channels
 if ~strcmp(flatline_crit,'off')
-    EEG = clean_flatlines(EEG,flatline_crit); end
+    EEG = clean_flatlines(EEG,flatline_crit); 
+end
 
 % high-pass filter the data
 if ~strcmp(highpass_band,'off')
-    EEG = clean_drifts(EEG,highpass_band); end
+    EEG = clean_drifts(EEG,highpass_band); 
+end
 if nargout > 1
-    HP = EEG; end
+    HP = EEG; 
+end
 
 % remove noisy channels by correlation and line-noise thresholds
 if ~strcmp(chancorr_crit,'off') || ~strcmp(line_crit,'off') %#ok<NODEF>
@@ -216,7 +230,12 @@ end
 
 % repair bursts by ASR
 if ~strcmp(burst_crit,'off')
-    EEG = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[]); end
+    if ~strcmpi(distance, 'euclidian')    
+        EEG = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[], [], true); 
+    else
+        EEG = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[]); 
+    end
+end
 if nargout > 2
     BUR = EEG; end
 

@@ -126,7 +126,7 @@ for o=1:W
 	corrs(:,o) = sum(XX.*YY)./(sqrt(sum(XX.^2)).*sqrt(sum(YY.^2)));
     timePassedList(o) = toc; % makoto
     medianTimePassed = median(timePassedList(1:o));
-    disp(sprintf('clean_channel: %3.0d/%d, %.1f minutes remaining.', o, W, medianTimePassed*(W-o)/60)); % makoto
+    fprintf('clean_channel: %3.0d/%d blocks, %.1f minutes remaining.\n', o, W, medianTimePassed*(W-o)/60); % makoto
 end
         
 flagged = corrs < corr_threshold;

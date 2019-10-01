@@ -161,8 +161,9 @@ lastPos = 0;
 hFig = figure('KeyPressFcn',@(varargin)on_key(varargin{2}.Key)); hold; axis();
 hAxis = gca;
 hSlider = uicontrol('style','slider','KeyPressFcn',@(varargin)on_key(varargin{2}.Key)); on_resize();
-jSlider = findjobj(hSlider);
-jSlider.AdjustmentValueChangedCallback = @on_update;
+set(hSlider, 'callback', @on_update);
+% jSlider = findjobj(hSlider);
+% jSlider.AdjustmentValueChangedCallback = @on_update;
 
 annotation(gcf,'textbox', [0 0.07 1 0],...
     'String', {'Keyboard shortcuts: [n] new data, [o] old data, [b] both data, [d] difference, [+] increase amp scale, [-] decrease amp scale, [*] shrink time scale, [/] expand time scale, [h] show/hide slider.'},...

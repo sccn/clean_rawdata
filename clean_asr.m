@@ -1,6 +1,6 @@
-function signal = clean_asr(signal,cutoff,windowlen,stepsize,maxdims,ref_maxbadchannels,ref_tolerances,ref_wndlen,usegpu)
+function signal = clean_asr(signal,cutoff,windowlen,stepsize,maxdims,ref_maxbadchannels,ref_tolerances,ref_wndlen,usegpu,useriemannian)
 % Run the ASR method on some high-pass filtered recording.
-% Signal = clean_asr(Signal,StandardDevCutoff,WindowLength,BlockSize,MaxDimensions,ReferenceMaxBadChannels,RefTolerances,ReferenceWindowLength)
+% Signal = clean_asr(Signal,StandardDevCutoff,WindowLength,BlockSize,MaxDimensions,ReferenceMaxBadChannels,RefTolerances,ReferenceWindowLength,UseGPU,UseRiemannian)
 %
 % This is an automated artifact rejection function that ensures that the data contains no events
 % that have abnormally strong power; the subspaces on which those events occur are reconstructed 
@@ -80,6 +80,12 @@ function signal = clean_asr(signal,cutoff,windowlen,stepsize,maxdims,ref_maxbadc
 %   ReferenceWindowLength : Granularity at which EEG time windows are extracted
 %                           for calibration purposes, in seconds. Default: 1.
 %
+%   UseRiemannian : [true|false] Use Riemannian distance instead of Euclidian distance. 
+%              Riemannian distance used the modication in the following publication 
+%              Blum Sarah, Jacobsen Nadine S. J., Bleichner Martin G., Debener Stefan (2019) 
+%              A Riemannian Modification of Artifact Subspace Reconstruction for EEG Artifact 
+%              Handling, Frontiers in Human Neuroscience, 13, 141. DOI=10.3389/fnhum.2019.00141.	
+%
 %   UseGPU : Whether to run on the GPU. This makes sense for offline processing if you have a a card with
 %            enough memory and good double-precision performance (e.g., NVIDIA GTX Titan or K20). 
 %            Note that for this to work you need to a) have the Parallel Computing toolbox and b) remove 
@@ -126,6 +132,8 @@ if ~exist('ref_maxbadchannels','var') || isempty(ref_maxbadchannels) ref_maxbadc
 if ~exist('ref_tolerances','var') || isempty(ref_tolerances) ref_tolerances = [-3.5 5.5]; end
 if ~exist('ref_wndlen','var') || isempty(ref_wndlen) ref_wndlen = 1; end
 if ~exist('usegpu','var') || isempty(usegpu) usegpu = false; end
+if ~exist('usegpu','var') || isempty(usegpu) usegpu = false; end
+if ~exist('useriemannian','var') || isempty(useriemannian) useriemannian = false; end
 
 signal.data = double(signal.data);
 
@@ -159,9 +167,17 @@ end
 % calibrate on the reference data
 disp('Estimating calibration statistics; this may take a while...');
 if exist('hlp_diskcache','file')
-    state = hlp_diskcache('filterdesign',@asr_calibrate,ref_section.data,ref_section.srate,cutoff);
+    if useriemannian
+        state = hlp_diskcache('filterdesign',@asr_calibrate_r,ref_section.data,ref_section.srate,cutoff);
+    else
+        state = hlp_diskcache('filterdesign',@asr_calibrate,ref_section.data,ref_section.srate,cutoff);
+    end
 else
-    state = asr_calibrate(ref_section.data,ref_section.srate,cutoff);
+    if useriemannian
+        state = asr_calibrate_r(ref_section.data,ref_section.srate,cutoff);
+    else
+        state = asr_calibrate(ref_section.data,ref_section.srate,cutoff);
+    end
 end
 clear ref_section;
 
@@ -171,6 +187,10 @@ if isempty(stepsize)
 % extrapolate last few samples of the signal
 sig = [signal.data bsxfun(@minus,2*signal.data(:,end),signal.data(:,(end-1):-1:end-round(windowlen/2*signal.srate)))];
 % process signal using ASR
-[signal.data,state] = asr_process(sig,signal.srate,state,windowlen,windowlen/2,stepsize,maxdims,[],usegpu);
+if useriemannian
+    [signal.data,state] = asr_process_r(sig,signal.srate,state,windowlen,windowlen/2,stepsize,maxdims,[],usegpu);
+else
+    [signal.data,state] = asr_process(sig,signal.srate,state,windowlen,windowlen/2,stepsize,maxdims,[],usegpu);
+end
 % shift signal content back (to compensate for processing delay)
 signal.data(:,1:size(state.carry,2)) = [];

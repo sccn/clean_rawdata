@@ -73,6 +73,9 @@
 
 function cleanEEG = clean_rawdata(EEG, arg_flatline, arg_highpass, arg_channel, arg_noisy, arg_burst, arg_window)
 
+disp('The function clean_rawdata has been deprecated and is only kept for backward');
+disp('compatibility. Use the clean_artifacts function instead.');
+
 if arg_flatline == -1; arg_flatline = 'off'; disp('flatchan rej disabled.'  ); end
 if arg_highpass == -1; arg_highpass = 'off'; disp('highpass disabled.'      ); end
 if arg_channel  == -1; arg_channel  = 'off'; disp('badchan rej disabled.'   ); end

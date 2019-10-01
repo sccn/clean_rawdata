@@ -30,10 +30,17 @@
 function eegplugin_clean_rawdata(fig,try_strings,catch_strings)
 
 cmd = [ try_strings.check_data ...
-        'EEG = pop_clean_rawdata(EEG);' ...
+        '[EEG,LASTCOM] = pop_clean_rawdata(EEG);' ...
         catch_strings.new_and_hist ];
+
+p = fileparts(which('eegplugin_clean_rawdata'));
+addpath(fullfile(p, 'manopt'));
+addpath(fullfile(p, 'manopt', 'manopt','manifolds', 'grassmann'));
+addpath(fullfile(p, 'manopt', 'manopt','tools'));
+addpath(fullfile(p, 'manopt', 'manopt','core'));
+addpath(fullfile(p, 'manopt', 'manopt','solvers', 'trustregions'));
 
 % create menu
 toolsmenu = findobj(fig, 'tag', 'tools');
-uimenu( toolsmenu, 'label', 'Clean continuous data using ASR', 'separator','on', 'userdata', 'startup:off;study:on', ...
+uimenu( toolsmenu, 'label', 'Clean continuous data using ASR', 'separator','on', 'userdata', 'startup:off;epoch:off;study:on', ...
     'callback', cmd);
