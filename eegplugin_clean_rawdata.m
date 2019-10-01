@@ -7,7 +7,6 @@
 
 % Author: Makoto Miyakoshi and Christian Kothe, SCCN,INC,UCSD 2013
 % History:
-% 01/19/2019 ver 0.40 by Arno. Made Octave compatible and pushed to Github.
 % 05/13/2014 ver 0.30 by Christian. Added better channel removal function that uses channel locations if present.
 % 11/20/2013 ver 0.20 by Christian. Updated signal processing routines to current versions.
 % 11/15/2013 ver 0.12 by Christian. Fixed a rare bug in asr_process.
@@ -30,7 +29,11 @@
 
 function eegplugin_clean_rawdata(fig,try_strings,catch_strings)
 
+cmd = [ try_strings.check_data ...
+        'EEG = pop_clean_rawdata(EEG);' ...
+        catch_strings.new_and_hist ];
+
 % create menu
 toolsmenu = findobj(fig, 'tag', 'tools');
-uimenu( toolsmenu, 'label', 'Clean continuous data using ASR', 'separator','on',...
-    'callback', 'EEG = pop_clean_rawdata(EEG); [ALLEEG EEG CURRENTSET] = eeg_store(ALLEEG, EEG); eeglab redraw');
+uimenu( toolsmenu, 'label', 'Clean continuous data using ASR', 'separator','on', 'userdata', 'startup:off;study:on', ...
+    'callback', cmd);
