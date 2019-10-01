@@ -27,8 +27,9 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function eegplugin_clean_rawdata(fig,try_strings,catch_strings)
+function vers = eegplugin_clean_rawdata(fig,try_strings,catch_strings)
 
+vers = '2';
 cmd = [ try_strings.check_data ...
         '[EEG,LASTCOM] = pop_clean_rawdata(EEG);' ...
         catch_strings.new_and_hist ];
