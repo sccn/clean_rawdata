@@ -2,12 +2,11 @@
 
 This plugin clean raw EEG data. Methods from the BCILAB toolbox
 are being used (in particular Artifact Subspace Reconstruction)
+designed by Christian Kothe.
 
 These functions were wraped up into an EEGLAB plugin by Makoto
-Myakoshi, then later by Arnaud Delorme.
-
-This folder contains a collection of EEG data cleaning functions
-written by Christian Kothe.
+Myakoshi, then later by Arnaud Delorme with input from Scott
+Makeig.
 
 The private folder contains 3rd party utilities, including:
 - findjobj.m Copyright (C) 2007-2010 Yair M. Altman
