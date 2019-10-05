@@ -115,7 +115,13 @@ blocksize = max(blocksize,ceil((C*C*S*8*3*2)/hlp_memfree));
 if nargin < 6 || isempty(A) || isempty(B)
     try
         % try to use yulewalk to design the filter (Signal Processing toolbox required)
-        [B,A] = yulewalk(8,[[0 2 3 13 16 40 min(80,srate/2-1)]*2/srate 1],[3 0.75 0.33 0.33 1 1 3 3]);
+        freqvals = [[0 2 3 13 16 40 min(80,srate/2-1)]*2/srate 1];
+        amps     = [3 0.75 0.33 0.33 1 1 3 3];
+        if srate < 80
+            freqvals(end-2) = [];
+            amps(    end)   = []; % we do not want to attenuate min(80,srate/2-1) since it is below 40 Hz
+        end
+        [B,A] = yulewalk(8,freqvals,amps);
     catch e %#ok<NASGU>
         % yulewalk not available (maybe no toolbox installed) -- use precomputed filter
         % coefficients depending on sampling rate
