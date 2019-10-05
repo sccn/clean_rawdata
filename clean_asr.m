@@ -1,6 +1,6 @@
-function signal = clean_asr(signal,cutoff,windowlen,stepsize,maxdims,ref_maxbadchannels,ref_tolerances,ref_wndlen,usegpu,useriemannian)
+function signal = clean_asr(signal,cutoff,windowlen,stepsize,maxdims,ref_maxbadchannels,ref_tolerances,ref_wndlen,usegpu,useriemannian,maxmem)
 % Run the ASR method on some high-pass filtered recording.
-% Signal = clean_asr(Signal,StandardDevCutoff,WindowLength,BlockSize,MaxDimensions,ReferenceMaxBadChannels,RefTolerances,ReferenceWindowLength,UseGPU,UseRiemannian)
+% Signal = clean_asr(Signal,StandardDevCutoff,WindowLength,BlockSize,MaxDimensions,ReferenceMaxBadChannels,RefTolerances,ReferenceWindowLength,UseGPU,UseRiemannian,MaxMem)
 %
 % This is an automated artifact rejection function that ensures that the data contains no events
 % that have abnormally strong power; the subspaces on which those events occur are reconstructed 
@@ -86,6 +86,8 @@ function signal = clean_asr(signal,cutoff,windowlen,stepsize,maxdims,ref_maxbadc
 %              A Riemannian Modification of Artifact Subspace Reconstruction for EEG Artifact 
 %              Handling, Frontiers in Human Neuroscience, 13, 141. DOI=10.3389/fnhum.2019.00141.	
 %
+%   MaxMem : Amount of memory to use. See asr_process for more information.
+%
 %   UseGPU : Whether to run on the GPU. This makes sense for offline processing if you have a a card with
 %            enough memory and good double-precision performance (e.g., NVIDIA GTX Titan or K20). 
 %            Note that for this to work you need to a) have the Parallel Computing toolbox and b) remove 
@@ -132,7 +134,7 @@ if ~exist('ref_maxbadchannels','var') || isempty(ref_maxbadchannels) ref_maxbadc
 if ~exist('ref_tolerances','var') || isempty(ref_tolerances) ref_tolerances = [-3.5 5.5]; end
 if ~exist('ref_wndlen','var') || isempty(ref_wndlen) ref_wndlen = 1; end
 if ~exist('usegpu','var') || isempty(usegpu) usegpu = false; end
-if ~exist('usegpu','var') || isempty(usegpu) usegpu = false; end
+if ~exist('maxmem','var') || isempty(maxmem) maxmem = 64; end
 if ~exist('useriemannian','var') || isempty(useriemannian) useriemannian = false; end
 
 signal.data = double(signal.data);
@@ -188,9 +190,9 @@ if isempty(stepsize)
 sig = [signal.data bsxfun(@minus,2*signal.data(:,end),signal.data(:,(end-1):-1:end-round(windowlen/2*signal.srate)))];
 % process signal using ASR
 if useriemannian
-    [signal.data,state] = asr_process_r(sig,signal.srate,state,windowlen,windowlen/2,stepsize,maxdims,[],usegpu);
+    [signal.data,state] = asr_process_r(sig,signal.srate,state,windowlen,windowlen/2,stepsize,maxdims,maxmem,usegpu);
 else
-    [signal.data,state] = asr_process(sig,signal.srate,state,windowlen,windowlen/2,stepsize,maxdims,[],usegpu);
+    [signal.data,state] = asr_process(sig,signal.srate,state,windowlen,windowlen/2,stepsize,maxdims,maxmem,usegpu);
 end
 % shift signal content back (to compensate for processing delay)
 signal.data(:,1:size(state.carry,2)) = [];
