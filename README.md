@@ -1,5 +1,11 @@
 # clean_rawdata EEGLAB plugin
 
+This plug-in, clean_rawdata uses methods (e.g., Artifact Subspace 
+Reconstruction, ASR) by Christian Kothe from the BCILAB Toolbox 
+(Kothe & Makeig, 2013), first wrapped into an EEGLAB plug-in by 
+Makoto Miyakoshi and further developed by Arnaud Delorme with 
+Scott Makeig.
+
 This plugin clean raw EEG data. Methods from the BCILAB toolbox
 are being used (in particular Artifact Subspace Reconstruction)
 designed by Christian Kothe.
