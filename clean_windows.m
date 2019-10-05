@@ -155,6 +155,12 @@ end
 %     signal.etc.clean_sample_mask = sample_mask;
 % end
 if isfield(signal.etc,'clean_sample_mask')
-    warning('EEG.etc.clean_sample is present. It is overwritten.')
+    oneInds = find(signal.etc.clean_sample_mask == 1);
+    if length(oneInds) == length(sample_mask)
+        signal.etc.clean_sample_mask(oneInds) = sample_mask;
+    else
+        warning('EEG.etc.clean_sample is present. It is overwritten.');
+    end
+else
+    signal.etc.clean_sample_mask = sample_mask;
 end
-signal.etc.clean_sample_mask = sample_mask;
