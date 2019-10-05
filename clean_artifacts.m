@@ -98,6 +98,9 @@ function [EEG,HP,BUR] = clean_artifacts(EEG,varargin)
 %                                 specified as 'off' to achieve the same effect as in the previous
 %                                 parameter. Default: [-Inf 5.5].
 %
+%   BurstRejection : 'on' or 'off'. If 'on' reject portions of data containing burst instead of 
+%                    correcting them using ASR. Default is 'off'.
+%
 %   WindowCriterionTolerances : These are the power tolerances outside of which a channel in the final
 %                               output data is considered "bad", in standard deviations relative
 %                               to a robust EEG power distribution (lower and upper bound). Any time
@@ -127,6 +130,9 @@ function [EEG,HP,BUR] = clean_artifacts(EEG,varargin)
 %                                    note that increasing this value requires the ChannelCriterion
 %                                    to be relaxed in order to maintain the same overall amount of
 %                                    removed channels. Default: 0.1.
+%
+%   MaxMem : The maximum amount of memory in MB used by the algorithm when processing. 
+%            See function asr_processf for more information. Default is 64.
 %
 % Out:
 %   EEG : Final cleaned EEG recording.
@@ -183,19 +189,11 @@ hlp_varargin2struct(varargin,...
     {'burst_crit_reftolerances','BurstCriterionRefTolerances'}, [-inf 5.5], ...
     {'distance','Distance'}, 'euclidian', ...
     {'window_crit_tolerances','WindowCriterionTolerances'},[-inf 7], ...
+    {'burst_rejection','BurstRejection'},'off', ...
     {'nolocs_channel_crit','NoLocsChannelCriterion'}, 0.45, ...
     {'nolocs_channel_crit_excluded','NoLocsChannelCriterionExcluded'}, 0.1, ...
+    {'max_mem','MaxMem'}, 64, ...
     {'flatline_crit','FlatlineCriterion'}, 5);
-
-if ~strcmpi(distance, 'euclidian')
-    % old default
-    if isequal(burst_crit_reftolerances, [-inf 5.5])
-        burst_crit_reftolerances = [-3.5 5.5];
-    end
-    if isequal(burst_crit_reftolerances, [-inf 7])
-        window_crit_tolerances = [-3.5 7];
-    end
-end
 
 % remove flat-line channels
 if ~strcmp(flatline_crit,'off')
@@ -219,23 +217,39 @@ if ~strcmp(chancorr_crit,'off') || ~strcmp(line_crit,'off') %#ok<NODEF>
     try 
         EEG = clean_channels(EEG,chancorr_crit,line_crit,[],channel_crit_maxbad_time); 
     catch e
-        if strcmp(e.identifier,'clean_channels:bad_chanlocs')
+%         if strcmp(e.identifier,'clean_channels:bad_chanlocs')
             disp('Your dataset appears to lack correct channel locations; using a location-free channel cleaning method.');
             EEG = clean_channels_nolocs(EEG,nolocs_channel_crit,nolocs_channel_crit_excluded,[],channel_crit_maxbad_time); 
-        else
-            rethrow(e);
-        end
+%         else
+%             rethrow(e);
+%         end
     end
 end
 
 % repair bursts by ASR
 if ~strcmp(burst_crit,'off')
     if ~strcmpi(distance, 'euclidian')    
-        EEG = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[], [], true); 
+        BUR = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[], [], true, max_mem); 
     else
-        EEG = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[]); 
+        BUR = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[], [], false, max_mem); 
+    end
+
+    if strcmp(burst_rejection,'on')
+        % portion of data which have changed
+        sample_mask = sum(abs(EEG.data-BUR.data),1) < 1e-10;
+
+        % find latency of regions
+        retain_data_intervals = reshape(find(diff([false sample_mask false])),2,[])';
+        retain_data_intervals(:,2) = retain_data_intervals(:,2)-1;
+
+        % reject regions
+        EEG = pop_select(EEG, 'point', retain_data_intervals);
+        EEG.etc.clean_sample_mask = sample_mask;
+    else
+        EEG = BUR;
     end
 end
+
 if nargout > 2
     BUR = EEG; end
 
