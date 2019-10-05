@@ -57,7 +57,6 @@ function [EEG,HP,BUR] = clean_artifacts(EEG,varargin)
 %   Highpass : Transition band for the initial high-pass filter in Hz. This is formatted as
 %              [transition-start, transition-end]. Default: [0.25 0.75].
 %
-%
 %   NOTE: The following are detail parameters that may be tuned if one of the criteria does
 %   not seem to be doing the right thing. These basically amount to side assumptions about the
 %   data that usually do not change much across recordings, but sometimes do.
