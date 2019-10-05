@@ -43,5 +43,5 @@ addpath(fullfile(p, 'manopt', 'manopt','solvers', 'trustregions'));
 
 % create menu
 toolsmenu = findobj(fig, 'tag', 'tools');
-uimenu( toolsmenu, 'label', 'Clean continuous data using ASR', 'separator','on', 'userdata', 'startup:off;epoch:off;study:on', ...
-    'callback', cmd);
+uimenu( toolsmenu, 'label', 'Reject data using Clean Rawdata and ASR', 'userdata', 'startup:off;epoch:off;study:on', ...
+    'callback', cmd, 'position', 7);
