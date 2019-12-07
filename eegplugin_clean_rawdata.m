@@ -29,7 +29,7 @@
 
 function vers = eegplugin_clean_rawdata(fig,try_strings,catch_strings)
 
-vers = '2.0';
+vers = '2.1';
 cmd = [ try_strings.check_data ...
         '[EEG,LASTCOM] = pop_clean_rawdata(EEG);' ...
         catch_strings.new_and_hist ];

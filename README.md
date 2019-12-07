@@ -62,6 +62,8 @@ Additional parameters are accessible through the command interface of the clean_
 # Version history
 v0.34 and earlier - original versions
 
-v1 - new default values for some of the rejection tools, new GUI
+v1.0 - new default values for some of the rejection tools, new GUI
 
-v2 - new improved GUI, compatibility with studies
+v2.0 - new improved GUI, compatibility with studies
+
+v2.1 - fix issue with 'distance' variable for burst detection
