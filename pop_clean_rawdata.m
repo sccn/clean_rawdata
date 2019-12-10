@@ -114,7 +114,9 @@ if nargin < 2
         opt.WindowCriterionTolerances = str2num(outs.rejwinval1);
         opt.WindowCriterion = str2num(outs.rejwinval2)/100;
     end
-    if outs.asrrej, opt.BurstRejection = 'on'; end
+    if outs.asrrej && ~strcmpi(opt.BurstCriterion, 'off')
+        opt.BurstRejection = 'on';
+    end
     
     % convert structure to cell
     options = fieldnames(opt);
