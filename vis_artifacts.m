@@ -150,9 +150,9 @@ if ~isempty(old.event)
 end
 
 % calculate whole-data scale
-old_iqr = 2*mad(old.data',1)';
+old_iqr = 2*mad(quantile(old.data',1000),1)';
 old_iqr(isnan(old_iqr)) = deal(mean(old_iqr(~isnan(old_iqr))));
-new_iqr = 2*mad(new.data',1)';
+new_iqr = 2*mad(quantile(new.data',1000),1)';
 new_iqr(isnan(new_iqr)) = deal(mean(new_iqr(~isnan(new_iqr))));
 
 % create figure & slider
