@@ -1,4 +1,4 @@
-function signal = clean_channels(signal,min_corr,ignored_quantile,window_len,max_broken_time,linenoise_aware)
+function [signal,removed_channels] = clean_channels(signal,min_corr,ignored_quantile,window_len,max_broken_time,linenoise_aware)
 % Remove channels with abnormal data from a continuous data set.
 % Signal = clean_channels(Signal,MinCorrelation,IgnoredQuantile,WindowLength,MaxBrokenTime,LineNoiseAware)
 %

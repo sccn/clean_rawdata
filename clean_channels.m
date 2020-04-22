@@ -1,4 +1,4 @@
-function signal = clean_channels(signal,corr_threshold,noise_threshold,window_len,max_broken_time,num_samples,subset_size)
+function [signal,removed_channels] = clean_channels(signal,corr_threshold,noise_threshold,window_len,max_broken_time,num_samples,subset_size)
 % Remove channels with abnormal data from a continuous data set.
 % Signal = clean_channels(Signal,CorrelationThreshold,WindowLength,MaxBrokenTime,NumSamples,SubsetSize,UseGPU)
 %
