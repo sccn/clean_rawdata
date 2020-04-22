@@ -129,7 +129,11 @@ end
 
 if length(EEG) > 1
     % process multiple datasets
-    [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'warning', 'on', 'params', options );
+    if nargin < 2
+        [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'warning', 'on', 'params', options );
+    else
+        [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'params', options );
+    end
     return;
 end
 
@@ -158,7 +162,7 @@ end
 EEG = cleanEEG;
 
 % Output eegh.
-com = sprintf('EEG = clean_artifacts(EEG, %s);', vararg2str(options));
+com = sprintf('EEG = pop_cleanrawdata(EEG, %s);', vararg2str(options));
 
 % Display the ending message.
 disp('Done.')
