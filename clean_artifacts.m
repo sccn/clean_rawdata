@@ -1,4 +1,4 @@
-function [EEG,HP,BUR] = clean_artifacts(EEG,varargin)
+function [EEG,HP,BUR,removed_channels] = clean_artifacts(EEG,varargin)
 % All-in-one function for artifact removal, including ASR.
 % [EEG,HP,BUR] = clean_artifacts(EEG, Options...)
 %
@@ -214,11 +214,11 @@ if ~strcmp(chancorr_crit,'off') || ~strcmp(line_crit,'off') %#ok<NODEF>
     if strcmp(line_crit,'off')
         line_crit = 100; end    
     try 
-        EEG = clean_channels(EEG,chancorr_crit,line_crit,[],channel_crit_maxbad_time); 
+        [EEG,removed_channels] = clean_channels(EEG,chancorr_crit,line_crit,[],channel_crit_maxbad_time); 
     catch e
 %         if strcmp(e.identifier,'clean_channels:bad_chanlocs')
             disp('Your dataset appears to lack correct channel locations; using a location-free channel cleaning method.');
-            EEG = clean_channels_nolocs(EEG,nolocs_channel_crit,nolocs_channel_crit_excluded,[],channel_crit_maxbad_time); 
+            [EEG,removed_channels] = clean_channels_nolocs(EEG,nolocs_channel_crit,nolocs_channel_crit_excluded,[],channel_crit_maxbad_time); 
 %         else
 %             rethrow(e);
 %         end
