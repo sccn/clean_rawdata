@@ -6,8 +6,9 @@
 %
 % see also: clean_artifacts
 
-% Author: Makoto Miyakoshi and Christian Kothe, SCCN,INC,UCSD
+% Author: Arnaud Delorme, Makoto Miyakoshi and Christian Kothe, SCCN,INC,UCSD
 % History:
+% 07/2019. Reprogrammed from Scratch (Arnaud Delorme)
 % 07/31/2018 Makoto. Returns error if input data size is 3. 
 % 04/26/2017 Makoto. Deletes existing EEG.etc.clean_channel/sample_mask. Try-catch to skip potential error in vis_artifact.
 % 07/18/2014 ver 1.4 by Makoto and Christian. New channel removal method supported. str2num -> str2num due to str2num([a b]) == NaN.
@@ -16,7 +17,7 @@
 % 07/16/2013 ver 1.1 by Makoto and Christian. Minor update for help and default values.
 % 06/26/2013 ver 1.0 by Makoto. Created.
 
-% Copyright (C) 2013, Makoto Miyakoshi and Christian Kothe, SCCN,INC,UCSD
+% Copyright (C) 2013, Arnaud Delorme, Makoto Miyakoshi and Christian Kothe, SCCN,INC,UCSD
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
