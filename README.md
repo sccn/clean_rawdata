@@ -67,3 +67,5 @@ v1.0 - new default values for some of the rejection tools, new GUI
 v2.0 - new improved GUI, compatibility with studies
 
 v2.1 - fix issue with 'distance' variable for burst detection
+
+v2.2 - fix history call for pop_clean_rawdata
