@@ -273,7 +273,11 @@ end
 
 function result = hlp_memfree
 % Get the amount of free physical memory, in bytes
-result = java.lang.management.ManagementFactory.getOperatingSystemMXBean().getFreePhysicalMemorySize();
+try
+    result = javaMethod('getFreePhysicalMemorySize', javaMethod('getOperatingSystemMXBean','java.lang.management.ManagementFactory'));
+catch
+    result = 1000000;
+end
 
 
 function [mu,sig,alpha,beta] = fit_eeg_distribution(X,min_clean_fraction,max_dropout_fraction,quants,step_sizes,beta)
