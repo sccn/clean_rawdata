@@ -176,9 +176,9 @@ if exist('hlp_diskcache','file')
     end
 else
     if useriemannian
-        state = asr_calibrate_r(ref_section.data,ref_section.srate,cutoff);
+        state = asr_calibrate_r(ref_section.data,ref_section.srate,cutoff, [], [], [], [], [], [], [], maxmem);
     else
-        state = asr_calibrate(ref_section.data,ref_section.srate,cutoff);
+        state = asr_calibrate(ref_section.data,ref_section.srate,cutoff, [], [], [], [], [], [], [], maxmem);
     end
 end
 clear ref_section;

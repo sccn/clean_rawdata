@@ -131,7 +131,7 @@ function [EEG,HP,BUR,removed_channels] = clean_artifacts(EEG,varargin)
 %                                    removed channels. Default: 0.1.
 %
 %   MaxMem : The maximum amount of memory in MB used by the algorithm when processing. 
-%            See function asr_processf for more information. Default is 64.
+%            See function asr_process for more information. Default is 64.
 %
 % Out:
 %   EEG : Final cleaned EEG recording.

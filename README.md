@@ -69,3 +69,5 @@ v2.0 - new improved GUI, compatibility with studies
 v2.1 - fix issue with 'distance' variable for burst detection
 
 v2.2 - fix history call for pop_clean_rawdata
+
+v2.3 - add maxmem to asr_calibrate to ensure reproducibility of results

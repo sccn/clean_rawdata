@@ -53,6 +53,11 @@ function [outdata,outstate] = asr_process(data,srate,state,windowlen,lookahead,s
 %
 %   State : final filter state (can be passed in for subsequent calls)
 %
+
+% History
+% 03/20/2019 Makoto and Chiyuan. Supported 'availableRAM_GB'. GUI switched to GUIDE-made.
+% 08/31/2012 Christian. Created.
+%
 %                                Christian Kothe, Swartz Center for Computational Neuroscience, UCSD
 %                                2012-08-31
 
@@ -102,7 +107,7 @@ if nargin < 8 || isempty(maxmem)
     if usegpu
         dev = gpuDevice(); maxmem = dev.FreeMemory/2^20; 
     else
-        maxmem = hlp_memfree/(2^21);
+        maxmem = hlp_memfree/(2^21); % In MB? (if 2^20) Probably because in the subsequent moving average process, you'll need to secure double amount of data.
     end
 end
 if maxdims < 1
@@ -113,7 +118,7 @@ if isempty(data)
 [C,S] = size(data);
 N = round(windowlen*srate);
 P = round(lookahead*srate);
-[T,M,A,B] = deal(state.T,state.M,state.A,state.B);
+[T,M,A,B] = deal(state.T,state.M,state.A,state.B); % T, threshold; M, mixing matrix from the calibration data (sqrt of covariance matrix), IIR filter, IIR filter 
 
 % initialize prior filter state by extrapolating available data into the past (if necessary)
 if isempty(state.carry)
@@ -123,12 +128,12 @@ data = [state.carry data];
 data(~isfinite(data(:))) = 0;
 
 % split up the total sample range into k chunks that will fit in memory
-splits = ceil((C*C*S*8*8 + C*C*8*S/stepsize + C*S*8*2 + S*8*5) / (maxmem*1024*1024 - C*C*P*8*3));
+splits = ceil((C*C*S*8*8 + C*C*8*S/stepsize + C*S*8*2 + S*8*5) / (maxmem*1024*1024 - C*C*P*8*3)); % Mysterious. More memory available, less 'splits'
 if splits > 1
     fprintf('Now cleaning data in %i blocks',splits); end
 
 for i=1:splits
-    range = 1+floor((i-1)*S/splits) : min(S,floor(i*S/splits));
+    range = 1+floor((i-1)*S/splits) : min(S,floor(i*S/splits)); %
     if ~isempty(range)
         % get spectrally shaped data X for statistics computation (range shifted by lookahead)
         [X,state.iir] = filter(B,A,double(data(:,range+P)),state.iir,2);
@@ -136,7 +141,7 @@ for i=1:splits
         if usegpu && length(range) > 1000
             try X = gpuArray(X); catch,end; end
         % compute running mean covariance (assuming a zero-mean signal)
-        [Xcov,state.cov] = moving_average(N,reshape(bsxfun(@times,reshape(X,1,C,[]),reshape(X,C,1,[])),C*C,[]),state.cov);
+        [Xcov,state.cov] = moving_average(N,reshape(bsxfun(@times,reshape(X,1,C,[]),reshape(X,C,1,[])),C*C,[]),state.cov); % ch c ch x range.
         % extract the subset of time points at which we intend to update
         update_at = min(stepsize:stepsize:(size(Xcov,2)+stepsize-1),size(Xcov,2));
         % if there is no previous R (from the end of the last chunk), we estimate it right at the first sample

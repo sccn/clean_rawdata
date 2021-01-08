@@ -1,6 +1,6 @@
-function state = asr_calibrate(X,srate,cutoff,blocksize,B,A,window_len,window_overlap,max_dropout_fraction,min_clean_fraction)
+function state = asr_calibrate(X,srate,cutoff,blocksize,B,A,window_len,window_overlap,max_dropout_fraction,min_clean_fraction,maxmem)
 % Calibration function for the Artifact Subspace Reconstruction (ASR) method.
-% State = asr_calibrate(Data,SamplingRate,Cutoff,BlockSize,FilterB,FilterA,WindowLength,WindowOverlap,MaxDropoutFraction,MinCleanFraction)
+% State = asr_calibrate(Data,SamplingRate,Cutoff,BlockSize,FilterB,FilterA,WindowLength,WindowOverlap,MaxDropoutFraction,MinCleanFraction,MaxMemory)
 %
 % The input to this data is a multi-channel time series of calibration data. In typical uses the
 % calibration data is clean resting EEG data of ca. 1 minute duration (can also be longer). One can
@@ -59,7 +59,12 @@ function state = asr_calibrate(X,srate,cutoff,blocksize,B,A,window_len,window_ov
 %
 %   MinCleanFraction : Minimum fraction of windows that need to be clean, used for threshold
 %                      estimation. Default: 0.25
-%
+% 
+%   MaxMemory : The maximum amount of memory used by the algorithm when processing a long chunk with
+%               many channels, in MB. The recommended value is at least 256. To run on the GPU, use
+%               the amount of memory available to your GPU here (needs the parallel computing toolbox).
+%               default: min(5000,1/2 * free memory in MB). Using smaller amounts of memory leads to
+%               longer running times.
 %
 % Out:
 %   State : initial state struct for asr_process
@@ -111,7 +116,12 @@ if nargin < 3 || isempty(cutoff)
     cutoff = 5; end
 if nargin < 4 || isempty(blocksize)
     blocksize = 10; end
-blocksize = max(blocksize,ceil((C*C*S*8*3*2)/hlp_memfree));
+
+if ~exist('maxmem', 'var')
+    maxmem = hlp_memfree/(2^21); end
+blocksize = max(blocksize,ceil((C*C*S*8*3*2)/(maxmem*(2^21))));
+%blocksize = max(blocksize,ceil((C*C*S*8*3*2)/hlp_memfree));
+
 if nargin < 6 || isempty(A) || isempty(B)
     try
         % try to use yulewalk to design the filter (Signal Processing toolbox required)
