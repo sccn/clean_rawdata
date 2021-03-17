@@ -3,7 +3,6 @@
 %                      To disable method(s), enter -1.
 % Usage:
 %   >>  EEG = pop_clean_rawdata(EEG);
-%   >> [EEG, rej_chans] = pop_clean_rawdata(EEG);
 %
 % see also: clean_artifacts
 
@@ -149,11 +148,7 @@ if isfield(EEG.etc, 'clean_sample_mask')
     disp('EEG.etc.clean_sample_mask present: Deleted.')
 end
 
-%cleanEEG = clean_artifacts(EEG, options{:});
-[cleanEEG, HP, BUR, removed_channels] = clean_artifacts(EEG, options{:});
-
-%Rejected channels
-rej_chans = {EEG.chanlocs(removed_channels).labels};
+cleanEEG = clean_artifacts(EEG, options{:});
                             
 % Apply Christian's function before and after comparison visualization.
 if nargin < 2 && outs.vis == 1
