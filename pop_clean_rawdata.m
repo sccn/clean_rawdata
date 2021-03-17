@@ -3,6 +3,7 @@
 %                      To disable method(s), enter -1.
 % Usage:
 %   >>  EEG = pop_clean_rawdata(EEG);
+%   >> [EEG, rej_chans] = pop_clean_rawdata(EEG);
 %
 % see also: clean_artifacts
 
@@ -33,7 +34,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [EEG,com] = pop_clean_rawdata(EEG, varargin)
+function [EEG, rej_chans, com] = pop_clean_rawdata(EEG, varargin)
 
 % Check input
 com = '';
@@ -148,7 +149,11 @@ if isfield(EEG.etc, 'clean_sample_mask')
     disp('EEG.etc.clean_sample_mask present: Deleted.')
 end
 
-cleanEEG = clean_artifacts(EEG, options{:});
+%cleanEEG = clean_artifacts(EEG, options{:});
+[cleanEEG, HP, BUR, removed_channels] = clean_artifacts(EEG, options{:});
+
+%Rejected channels
+rej_chans = {EEG.chanlocs(removed_channels).labels};
                             
 % Apply Christian's function before and after comparison visualization.
 if nargin < 2 && outs.vis == 1
