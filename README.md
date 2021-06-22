@@ -59,6 +59,10 @@ Check checkbox **(14)** allow plotting rejection results overlaid on the origina
 
 Additional parameters are accessible through the command interface of the clean_artifacts function.
 
+## Additional documentation
+
+Makoto Miyakoshi wrote a page in the [wiki section](https://github.com/sccn/clean_rawdata/wiki) of this repository discussing ASR.
+
 # Version history
 v0.34 and earlier - original versions
 
