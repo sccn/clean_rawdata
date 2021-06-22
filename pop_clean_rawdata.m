@@ -131,9 +131,9 @@ end
 if length(EEG) > 1
     % process multiple datasets
     if nargin < 2
-        [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'warning', 'on', 'params', options );
+        [ EEG, com ] = eeg_eval( @clean_artifacts, EEG, 'warning', 'on', 'params', options );
     else
-        [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'params', options );
+        [ EEG, com ] = eeg_eval( @clean_artifacts, EEG, 'params', options );
     end
     return;
 end
