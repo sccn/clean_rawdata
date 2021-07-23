@@ -75,3 +75,5 @@ v2.1 - fix issue with 'distance' variable for burst detection
 v2.2 - fix history call for pop_clean_rawdata
 
 v2.3 - add maxmem to asr_calibrate to ensure reproducibility of results
+
+v2.4 - fixing issue with running function in parallel for Matlab 2020a
