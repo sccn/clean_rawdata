@@ -219,6 +219,7 @@ set(hFig, 'ResizeFcn', @on_window_resized);
         end
         scale = ((ylr(2)-ylr(1))/size(new.data,1)) ./ (opts.yscaling*iqrange); scale(~isfinite(scale)) = 0;
         scale(scale>median(scale)*3) = median(scale);
+        scale = scale(:);
         scale = repmat(scale,1,length(wndindices));
         
         % draw
