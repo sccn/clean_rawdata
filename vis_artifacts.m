@@ -26,7 +26,7 @@ function [h_old,h_new] = vis_artifacts(new,old,varargin)
 %                'OldColor' : color of the old (i.e., uncleaned) data
 %                'HighpassOldData' : whether to high-pass the old data if not already done
 %                'ScaleBy' : the data set according to which the display should be scaled, can be
-%                            'old' or 'new' (default: 'new')
+%                            'old', 'new' or 'noscale' (default: 'new')
 %                'ChannelSubset' : optionally a channel subset to display
 %                'TimeSubet' : optionally a time subrange to display
 %                'DisplayMode' : what should be displayed: 'both', 'new', 'old', 'diff'
@@ -88,7 +88,7 @@ opts = hlp_varargin2struct(varargin, ...
     {'show_removed_portions','ShowRemovedPortions'},true, ...% whether to show removed data portions (if only one set is passed in)
     {'show_events','ShowEvents'},true, ...      % whether to show events
     {'show_eventlegend','ShowEventLegend'},false, ...  % whether to show a legend for the currently visible events
-    {'scale_by','ScaleBy'},'allnew',...         % the data set according to which the display should be scaled (can be allold, allnew, wndold, or wndnew)
+    {'scale_by','ScaleBy'},'allnew',...         % the data set according to which the display should be scaled (can be allold, allnew, wndold, wndnew or noscale)
     {'channel_subset','ChannelSubset'},[], ...  % optionally a channel subset to display
     {'time_subset','TimeSubset'},[],...         % optionally a time subrange to display
     {'display_mode','DisplayMode'},'both',...   % what should be displayed: 'both', 'new', 'old', 'diff'
@@ -214,6 +214,8 @@ set(hFig, 'ResizeFcn', @on_window_resized);
                 iqrange(isnan(iqrange)) = mad(oldwnd(isnan(iqrange),:)',1)';
             case {'wndold','old'}
                 iqrange = mad(oldwnd',1)';
+            case 'noscale'
+                iqrange = ones(size(new.data,1),1);
             otherwise
                 error('Unsupported scale_by option.');
         end
