@@ -196,6 +196,12 @@ set(hFig, 'ResizeFcn', @on_window_resized);
         ylr = yl(1) + opts.yrange*(yl(2)-yl(1));
         channel_y = (ylr(2):(ylr(1)-ylr(2))/(size(new.data,1)-1):ylr(1))';
         
+        % Add channel labels to y axis
+        if isfield(old.chanlocs,'labels')
+            set(hAxis,'ytick',flipud(channel_y));
+            set(hAxis,'yticklabel',fliplr({old.chanlocs.labels}));
+        end
+        
         % compute sample range
         wndsamples = opts.wndlen * new.srate;
         pos = floor((size(new.data,2)-wndsamples)*relPos);
