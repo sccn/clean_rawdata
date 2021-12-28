@@ -385,6 +385,7 @@ for m = round(n*(max_width:-step_sizes(2):min_width))
     nbins = round(3*log2(1+m/2));
     H = bsxfun(@times,X(1:m,:),nbins./X(m,:));
     logq = log(histc(H,[0:nbins-1,Inf]) + 0.01);
+    if size(logq,1) == 1, logq = logq'; end
     
     % for each shape value...
     for b=1:length(beta)
