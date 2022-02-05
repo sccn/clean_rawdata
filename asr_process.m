@@ -38,7 +38,7 @@ function [outdata,outstate] = asr_process(data,srate,state,windowlen,lookahead,s
 %                   may be used (the maximum fraction is 1.0). Default 0.66
 %
 %   MaxMemory : The maximum amount of memory used by the algorithm when processing a long chunk with
-%               many channels, in MB. The recommended value is at least 256. To run on the GPU, use
+%               many channels, in MB. The recommended value is at least 64. To run on the GPU, use
 %               the amount of memory available to your GPU here (needs the parallel computing toolbox).
 %               default: min(5000,1/2 * free memory in MB). Using smaller amounts of memory leads to
 %               longer running times.

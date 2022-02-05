@@ -61,7 +61,7 @@ function state = asr_calibrate(X,srate,cutoff,blocksize,B,A,window_len,window_ov
 %                      estimation. Default: 0.25
 % 
 %   MaxMemory : The maximum amount of memory used by the algorithm when processing a long chunk with
-%               many channels, in MB. The recommended value is at least 256. To run on the GPU, use
+%               many channels, in MB. The recommended value is 64 Mb. To run on the GPU, use
 %               the amount of memory available to your GPU here (needs the parallel computing toolbox).
 %               default: min(5000,1/2 * free memory in MB). Using smaller amounts of memory leads to
 %               longer running times.
@@ -385,6 +385,7 @@ for m = round(n*(max_width:-step_sizes(2):min_width))
     nbins = round(3*log2(1+m/2));
     H = bsxfun(@times,X(1:m,:),nbins./X(m,:));
     logq = log(histc(H,[0:nbins-1,Inf]) + 0.01);
+    if size(logq,1) == 1, logq = logq'; end
     
     % for each shape value...
     for b=1:length(beta)
