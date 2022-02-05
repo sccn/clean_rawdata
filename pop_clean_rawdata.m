@@ -47,8 +47,12 @@ if nargin < 2
     cb_chan   = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''chan'')  , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''chan'')  , ''enable'', ''off''); end';
     cb_asr    = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''asr'')   , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''asr'')   , ''enable'', ''off''); end';
     cb_rej    = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''rej'')   , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''rej'')   , ''enable'', ''off''); end';
+    cb_chan   = 'pop_chansel(get(gcbf, ''userdata''), ''field'', ''labels'', ''handle'', findobj(''parent'', gcbf, ''tag'', ''channels''));';
     winsize   = max(0.5,1.5*EEG(1).nbchan/EEG(1).srate);
     uilist =    {...
+        { 'style' 'text' 'string' 'Channels to include' 'fontweight' 'bold' } { 'style' 'pushbutton' 'string' '...' 'callback' cb_chan } ...
+        {'style' 'edit' 'string' 'All' 'tag' 'channels'  } ...
+        ...
         {'style' 'checkbox' 'string' 'Remove channel drift (data not already high-pass filtered)' 'fontweight' 'bold' 'tag' 'filter' 'callback' cb_filter} ...
         {} {'style' 'text' 'string' 'Linear filter (FIR) transition band [lo hi] in Hz            ' 'userdata' 'filter' 'enable' 'off' } ...
         {'style' 'edit' 'string' '0.25 0.75', 'enable' 'off' 'tag','filterfreqs', 'userdata' 'filter' 'tooltipstring', wordwrap('The first number is the frequency below which everything is removed, and the second number is the frequency above which everything is retained. There is a linear transition in between. For best performance of subsequent processing steps the upper frequency should be close to 1 or 2 Hz, but you can go lower if certain activities need to be retained.',80)} ...
@@ -70,18 +74,31 @@ if nargin < 2
         {} {'style' 'checkbox' 'tag' 'asrrej' 'string' 'Remove bad data periods (instead of correcting them)' 'value' 1 'userdata' 'asr'} {} ...
         ...
         {} {'style' 'checkbox' 'string' 'Additional removal of bad data periods' 'fontweight' 'bold' 'value' 1 'tag' 'rejwin' 'callback' cb_rej } ...
-        {} {'style' 'text' 'tag' 'asrwintext' 'string' 'Acceptable [min max] channel power range (+/- std dev)'  'userdata' 'rej'} ...
+        {} {'style' 'text' 'tag' 'asrwintext' 'string' 'Acceptable [min max] channel RMS range (+/- std dev)'  'userdata' 'rej'} ...
         {'style' 'edit' 'string' '-Inf 7','tag', 'rejwinval1', 'userdata' 'rej' 'tooltipstring', wordwrap('If a time window has a larger fraction of simultaneously corrupted channels than this (after the other cleaning attempts), it will be cut out of the data. This can happen if a time window was corrupted beyond the point where it could be recovered.',80)} ...
         {} {'style' 'text' 'tag' 'asrwintext' 'string' 'Maximum out-of-bound channels (%)'  'userdata' 'rej'} ...
         {'style' 'edit' 'string' '25','tag', 'rejwinval2', 'userdata' 'rej' 'tooltipstring', wordwrap('If a time window has a larger fraction of simultaneously corrupted channels than this (after the other cleaning attempts), it will be cut out of the data. This can happen if a time window was corrupted beyond the point where it could be recovered.',80)} ...
         ...
         {} {'style' 'checkbox' 'string' 'Pop up scrolling data window with rejected data highlighted' 'tag' 'vis' 'value' fastif(length(EEG) > 1, 0, 1) 'enable' fastif(length(EEG) > 1, 'off', 'on') }};
 
+    % channel labels
+    % --------------
+    if ~isempty(EEG(1).chanlocs)
+        tmpchanlocs = EEG(1).chanlocs;        
+    else
+        tmpchanlocs = [];
+        for index = 1:EEG(1).nbchan
+            tmpchanlocs(index).labels = int2str(index);
+            tmpchanlocs(index).type = '';
+        end
+    end
+    
     row   = [0.1 1 0.3];
     row2  = [0.1 1.2 0.1];
-    geom =     { 1 row     1   1 row     row     row     1   1 row     row2 row2   1   1 row  row     1   1 };
-    geomvert = [ 1 1       0.3 1 1       1       1       0.3 1 1       1    1      0.3 1 1    1       0.3 1 ];
-    [res,~,~,outs] = inputgui('title', 'pop_clean_rawdata()', 'geomvert', geomvert, 'geometry', geom, 'uilist',uilist, 'helpcom', 'pophelp(''clean_artifacts'');');
+    row3  = [0.9 0.2 0.3];
+    geom =     { row3 1 row     1   1 row     row     row     1   1 row     row2 row2   1   1 row  row     1   1 };
+    geomvert = [ 1 1 1       0.3 1 1       1       1       0.3 1 1       1    1      0.3 1 1    1       0.3 1 ];
+    [res,~,~,outs] = inputgui('title', 'pop_clean_rawdata()', 'geomvert', geomvert, 'geometry', geom, 'uilist',uilist, 'helpcom', 'pophelp(''clean_artifacts'');', 'userdata', tmpchanlocs);
 
     % Return error if no input.
     if isempty(res) return; end
@@ -118,6 +135,11 @@ if nargin < 2
     if outs.asrrej && ~strcmpi(opt.BurstCriterion, 'off')
         opt.BurstRejection = 'on';
     end
+    if ~strcmpi(outs.channels, 'all')
+       [ chaninds, chanlist ] = eeg_decodechan(EEG(1).chanlocs, outs.channels);
+       if isempty(chanlist), chanlist = chaninds; end
+       opt.channels = chanlist;
+    end
     
     % convert structure to cell
     options = fieldnames(opt);
@@ -131,9 +153,9 @@ end
 if length(EEG) > 1
     % process multiple datasets
     if nargin < 2
-        [ EEG, com ] = eeg_eval( @clean_artifacts, EEG, 'warning', 'on', 'params', options );
+        [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'warning', 'on', 'params', options );
     else
-        [ EEG, com ] = eeg_eval( @clean_artifacts, EEG, 'params', options );
+        [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'params', options );
     end
     return;
 end
@@ -149,7 +171,7 @@ if isfield(EEG.etc, 'clean_sample_mask')
 end
 
 cleanEEG = clean_artifacts(EEG, options{:});
-                            
+
 % Apply Christian's function before and after comparison visualization.
 if nargin < 2 && outs.vis == 1
     try
