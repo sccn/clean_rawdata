@@ -181,6 +181,7 @@ hlp_varargin2struct(varargin,...
     {'chancorr_crit','ChannelCorrelationCriterion','ChannelCriterion'}, 0.8, ...
     {'line_crit','LineNoiseCriterion'}, 4, ...
     {'burst_crit','BurstCriterion'}, 5, ...
+    {'channels','Channels'}, [], ...
     {'window_crit','WindowCriterion'}, 0.25, ...
     {'highpass_band','Highpass'}, [0.25 0.75], ...
     {'channel_crit_maxbad_time','ChannelCriterionMaxBadTime'}, 0.5, ...
@@ -192,7 +193,21 @@ hlp_varargin2struct(varargin,...
     {'nolocs_channel_crit','NoLocsChannelCriterion'}, 0.45, ...
     {'nolocs_channel_crit_excluded','NoLocsChannelCriterionExcluded'}, 0.1, ...
     {'max_mem','MaxMem'}, 64, ...
+    {'availableRAM_GB','availableRAM_GB'}, NaN, ...
     {'flatline_crit','FlatlineCriterion'}, 5);
+
+if ~isnan(availableRAM_GB)
+    max_mem = availableRAM_GB*1000;
+end
+
+% ignore some channels
+if ~isempty(channels)
+    if ~iscell(channels)
+        error('Cannot exclude channels without channel labels')
+    end
+    oriEEG = EEG;
+    EEG = pop_select(EEG, 'channel', channels);
+end
 
 % remove flat-line channels
 if ~strcmp(flatline_crit,'off')
@@ -258,3 +273,36 @@ if ~strcmp(window_crit,'off') && ~strcmp(window_crit_tolerances,'off')
     EEG = clean_windows(EEG,window_crit,window_crit_tolerances); 
 end
 disp('Use vis_artifacts to compare the cleaned data to the original.');
+
+% add back original channels
+if ~isempty(channels)
+   
+    % Apply same transformation to the data before removal of channels and data
+    EEG = eeg_checkset(EEG, 'eventconsistency');
+    if ~isempty(EEG.event) && isfield(EEG.event, 'type') && isstr(EEG.event(1).type)
+        disp('Adding back removed channels');
+        boundaryEvents = strmatch( 'boundary', { EEG.event.type },  'exact');
+        
+        % remove again data portions
+        boundloc = [ EEG.event(boundaryEvents).latency ];
+        dur      = [ EEG.event(boundaryEvents).duration ];
+        cumdur   = cumsum(dur);
+        boundloc = boundloc + [0 cumdur(1:end-1) ];
+        boundloc = [ boundloc; boundloc+dur-1]';
+        oriEEG = eeg_eegrej(oriEEG, ceil(boundloc));
+        oriEEG.event = EEG.event;
+        
+        % copy clean data to oriEEG (in case data was corrected
+        [~,chanInds1, chanInds2] = intersect({ oriEEG.chanlocs.labels }, { EEG.chanlocs.labels });
+        if size(oriEEG.data,2) ~= size(EEG.data,2)
+            error('Issue with adding back channels removed. Send us your data.');
+        end
+        oriEEG.data(chanInds1,:) = EEG.data(chanInds2,:);
+        oriEEG.pnts = EEG.pnts;
+
+        EEG = oriEEG;
+    end
+    
+end
+
+
