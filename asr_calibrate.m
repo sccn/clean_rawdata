@@ -156,13 +156,13 @@ if nargin < 6 || isempty(A) || isempty(B)
         end
     end
 end
-if nargin < 8 || isempty(window_len)
+if nargin < 7 || isempty(window_len)
     window_len = 0.5; end
-if nargin < 9 || isempty(window_overlap)
+if nargin < 8 || isempty(window_overlap)
     window_overlap = 0.66; end
-if nargin < 10 || isempty(max_dropout_fraction)
+if nargin < 9 || isempty(max_dropout_fraction)
     max_dropout_fraction = 0.1; end
-if nargin < 11 || isempty(min_clean_fraction)
+if nargin < 10 || isempty(min_clean_fraction)
     min_clean_fraction = 0.25; end
 
 X(~isfinite(X(:))) = 0;
