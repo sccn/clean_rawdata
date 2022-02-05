@@ -56,6 +56,7 @@ function [Xsol, S0] = rasr_nonlinear_eigenspace(L, k, alpha)
       
     % Initialization as suggested in above referenced paper.
     % randomly generate starting point for svd
+    rng(0); % seeds the random number generator to produce a predictable sequence of numbers
     X = randn(n, k);
     [U, S, V] = svd(X, 0); %#ok<ASGLU>
     X = U*V';
