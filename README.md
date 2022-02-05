@@ -79,3 +79,5 @@ v2.3 - add maxmem to asr_calibrate to ensure reproducibility of results
 v2.4 - fixing issue with running function in parallel for Matlab 2020a
 
 v2.5 - move asr_calibrate out of the private folder so it can be used directly
+
+v2.6 - allowing to exclude channels and a variety of small bug fixes
