@@ -130,6 +130,9 @@ data = [state.carry data];
 data(~isfinite(data(:))) = 0;
 
 % split up the total sample range into k chunks that will fit in memory
+if maxmem*1024*1024 - C*C*P*8*3 < 0
+    error('Not enough memory');
+end
 splits = ceil((C*C*S*8*8 + C*C*8*S/stepsize + C*S*8*2 + S*8*5) / (maxmem*1024*1024 - C*C*P*8*3));
 if splits > 1
     fprintf('Now cleaning data in %i blocks',splits); end
