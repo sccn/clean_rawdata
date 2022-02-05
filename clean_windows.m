@@ -15,10 +15,9 @@ function [signal,sample_mask] = clean_windows(signal,max_bad_channels,zthreshold
 %                    contain (more than this and it is removed). Reasonable range is 0.05 (very clean
 %                    output) to 0.3 (very lax cleaning of only coarse artifacts). Default: 0.2.
 %
-%   PowerTolerances: The minimum and maximum standard deviations within which the power of a channel
-%                    must lie (relative to a robust estimate of the clean EEG power distribution in 
+%   PowerTolerances: The minimum and maximum standard deviations within which the RMS of a channel
+%                    must lie (relative to a robust estimate of the clean EEG RMS distribution in 
 %                    the channel) for it to be considered "not bad". Default: [-3.5 5].
-%
 %
 %   The following are detail parameters that usually do not have to be tuned. If you can't get
 %   the function to do what you want, you might consider adapting these to your data.
