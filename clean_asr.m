@@ -28,8 +28,7 @@ function signal = clean_asr(signal,cutoff,windowlen,stepsize,maxdims,ref_maxbadc
 %            data and will be removed. The most aggressive value that can be used without losing
 %            much EEG is 3. For new users it is recommended to at first visually inspect the difference 
 %            between the original and cleaned data to get a sense of the removed content at various 
-%            levels. A quite conservative value is 5. Default: 5.
-%
+%            levels. An aggressive value is 5, and conservative value is 20. Default: 5.
 %
 %   The following are detail parameters that usually do not have to be tuned. If you cannot get
 %   the function to do what you want, you might consider adapting these better to your data.
