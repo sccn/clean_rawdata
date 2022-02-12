@@ -32,7 +32,7 @@ function state = asr_calibrate(X,srate,cutoff,blocksize,B,A,window_len,window_ov
 %   RejectionCutoff: Standard deviation cutoff for rejection. Data portions whose variance is larger
 %                    than this threshold relative to the calibration data are considered missing
 %                    data and will be removed. The most aggressive value that can be used without
-%                    losing too much EEG is 2.5. A quite conservative value would be 5. Default: 5.
+%                    losing too much EEG is 5. Default: 5.
 %
 %   Blocksize : Block size for calculating the robust data covariance and thresholds, in samples;
 %               allows to reduce the memory and time requirements of the robust estimators by this 
