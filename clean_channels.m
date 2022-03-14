@@ -104,7 +104,9 @@ if ~(isfield(signal.chanlocs,'X') && isfield(signal.chanlocs,'Y') && isfield(sig
 
 % get the matrix of all channel locations [3xN]
 [x,y,z] = deal({signal.chanlocs.X},{signal.chanlocs.Y},{signal.chanlocs.Z});
-usable_channels = find(~cellfun('isempty',x) & ~cellfun('isempty',y) & ~cellfun('isempty',z));
+usable_channels1 = ~cellfun('isempty',x) & ~cellfun('isempty',y) & ~cellfun('isempty',z);
+usable_channels2 = ~cellfun(@isnan,x) & ~cellfun(@isnan,y) & ~cellfun(@isnan,z);
+usable_channels  = find( usable_channels1 & usable_channels2 );
 locs = [cell2mat(x(usable_channels));cell2mat(y(usable_channels));cell2mat(z(usable_channels))];
 X = X(:,usable_channels);
   
@@ -169,6 +171,7 @@ end
 % calculate a bag of reconstruction matrices from random channel subsets
 function P = calc_projector(locs,num_samples,subset_size)
 %stream = RandStream('mt19937ar','Seed',435656);
+rng('default'); % make results reproducible
 rand_samples = {};
 for k=num_samples:-1:1
     tmp = zeros(size(locs,2));
