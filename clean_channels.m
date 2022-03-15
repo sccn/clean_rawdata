@@ -105,7 +105,7 @@ if ~(isfield(signal.chanlocs,'X') && isfield(signal.chanlocs,'Y') && isfield(sig
 
 % get the matrix of all channel locations [3xN]
 [x,y,z] = deal({signal.chanlocs.X},{signal.chanlocs.Y},{signal.chanlocs.Z});
-usable_channels = find(~cellfun('isempty',x) & ~cellfun('isempty',y) & ~cellfun('isempty',z));
+usable_channels = find(cellfun(@(e) ~isempty(e) && ~isnan(e),x) & cellfun(@(e) ~isempty(e) && ~isnan(e),y) & cellfun(@(e) ~isempty(e) && ~isnan(e),z));
 locs = [cell2mat(x(usable_channels));cell2mat(y(usable_channels));cell2mat(z(usable_channels))];
 X = X(:,usable_channels);
   
