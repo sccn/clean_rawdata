@@ -65,6 +65,7 @@ if ~exist('window_len','var') || isempty(window_len) window_len = 5; end
 if ~exist('max_broken_time','var') || isempty(max_broken_time) max_broken_time = 0.4; end
 if ~exist('num_samples','var') || isempty(num_samples) num_samples = 50; end
 if ~exist('subset_size','var') || isempty(subset_size) subset_size = 0.25; end
+if ~exist('reset_rng','var') || isempty(reset_rng) reset_rng = true; end
 
 subset_size = round(subset_size*size(signal.data,1)); 
 
@@ -104,13 +105,14 @@ if ~(isfield(signal.chanlocs,'X') && isfield(signal.chanlocs,'Y') && isfield(sig
 
 % get the matrix of all channel locations [3xN]
 [x,y,z] = deal({signal.chanlocs.X},{signal.chanlocs.Y},{signal.chanlocs.Z});
-usable_channels1 = ~cellfun('isempty',x) & ~cellfun('isempty',y) & ~cellfun('isempty',z);
-usable_channels2 = ~cellfun(@isnan,x) & ~cellfun(@isnan,y) & ~cellfun(@isnan,z);
-usable_channels  = find( usable_channels1 & usable_channels2 );
+usable_channels = find(~cellfun('isempty',x) & ~cellfun('isempty',y) & ~cellfun('isempty',z));
 locs = [cell2mat(x(usable_channels));cell2mat(y(usable_channels));cell2mat(z(usable_channels))];
 X = X(:,usable_channels);
   
 % caculate all-channel reconstruction matrices from random channel subsets   
+if reset_rng
+    rng('default')
+end
 if exist('OCTAVE_VERSION', 'builtin') == 0
     P = hlp_microcache('cleanchans',@calc_projector,locs,num_samples,subset_size);
 else
@@ -171,7 +173,6 @@ end
 % calculate a bag of reconstruction matrices from random channel subsets
 function P = calc_projector(locs,num_samples,subset_size)
 %stream = RandStream('mt19937ar','Seed',435656);
-rng('default'); % make results reproducible
 rand_samples = {};
 for k=num_samples:-1:1
     tmp = zeros(size(locs,2));
