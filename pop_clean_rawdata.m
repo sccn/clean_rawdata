@@ -41,23 +41,32 @@ if size(EEG(1).data) == 3
     error('Input data must be continuous. This data seems epoched.')
 end
 
+fusechanrej = false;
 if nargin < 2
     % Obtain user inputs.
-    cb_filter = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''filter''), ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''filter''), ''enable'', ''off''); end';
-    cb_chan   = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''chan'')  , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''chan'')  , ''enable'', ''off''); end';
+    cb_filter = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''filter''), ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''filter''), ''enable'', ''off'', ''value'', 0); end';
+    cb_chan   = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''chan'')  , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''chan'')  , ''enable'', ''off'', ''value'', 0); end';
     cb_asr    = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''asr'')   , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''asr'')   , ''enable'', ''off''); end';
     cb_rej    = 'if get(gcbo, ''value''), set(findobj(gcbf, ''userdata'', ''rej'')   , ''enable'', ''on''); else set(findobj(gcbf, ''userdata'', ''rej'')   , ''enable'', ''off''); end';
-    cb_chan   = 'pop_chansel(get(gcbf, ''userdata''), ''field'', ''labels'', ''handle'', findobj(''parent'', gcbf, ''tag'', ''channels''));';
+    cb_select1   = 'pop_chansel(get(gcbf, ''userdata''), ''field'', ''labels'', ''handle'', findobj(''parent'', gcbf, ''tag'', ''chanuse''));    set(findobj(''parent'', gcbf, ''tag'', ''chanuseflag''), ''value'', 1);    set(findobj(''parent'', gcbf, ''tag'', ''chanignoreflag''), ''value'', 0);';
+    cb_select2   = 'pop_chansel(get(gcbf, ''userdata''), ''field'', ''labels'', ''handle'', findobj(''parent'', gcbf, ''tag'', ''chanignore'')); set(findobj(''parent'', gcbf, ''tag'', ''chanignoreflag''), ''value'', 1); set(findobj(''parent'', gcbf, ''tag'', ''chanuseflag''), ''value'', 0);';
     winsize   = max(0.5,1.5*EEG(1).nbchan/EEG(1).srate);
     uilist =    {...
-        { 'style' 'text' 'string' 'Channels to include' 'fontweight' 'bold' } { 'style' 'pushbutton' 'string' '...' 'callback' cb_chan } ...
-        {'style' 'edit' 'string' 'All' 'tag' 'channels'  } ...
-        ...
         {'style' 'checkbox' 'string' 'Remove channel drift (data not already high-pass filtered)' 'fontweight' 'bold' 'tag' 'filter' 'callback' cb_filter} ...
         {} {'style' 'text' 'string' 'Linear filter (FIR) transition band [lo hi] in Hz            ' 'userdata' 'filter' 'enable' 'off' } ...
         {'style' 'edit' 'string' '0.25 0.75', 'enable' 'off' 'tag','filterfreqs', 'userdata' 'filter' 'tooltipstring', wordwrap('The first number is the frequency below which everything is removed, and the second number is the frequency above which everything is retained. There is a linear transition in between. For best performance of subsequent processing steps the upper frequency should be close to 1 or 2 Hz, but you can go lower if certain activities need to be retained.',80)} ...
         ...
-        {} {'style' 'checkbox' 'string' 'Remove bad channels' 'fontweight' 'bold' 'tag' 'chanrm' 'callback' cb_chan 'value' 1 } ...
+        {} ...
+        {'style' 'checkbox' 'string' 'Process/remove channels' 'fontweight' 'bold' 'tag' 'chanrm' 'callback' cb_chan 'value' 1 } ...
+        ...
+        {} { 'style' 'checkbox' 'string' 'Only consider these channels' 'tag' 'chanuseflag' 'userdata' 'chan' } ...
+        { 'style' 'pushbutton' 'string' '...' 'userdata' 'chan' 'callback' cb_select1 } ...
+        {'style' 'edit' 'string' '' 'userdata' 'chan'  'tag' 'chanuse'  } ...
+        ...
+        {} {'style' 'checkbox' 'string' 'Ignore these channels (ECG, EMG, ...)' 'userdata' 'chan' 'value' 0 'tag' 'chanignoreflag'  } ...
+        {'style' 'pushbutton' 'string' '...', 'userdata' 'chan' 'callback' cb_select2 } ...
+        {'style' 'edit' 'string' '', 'userdata' 'chan' 'tag' 'chanignore'  } ...
+        ...
         {} {'style' 'checkbox' 'string' 'Remove channel if it is flat for more than (seconds)' 'tag' 'rmflat' 'userdata' 'chan' 'value' 1 } ...
         {'style' 'edit' 'string' '5', 'userdata' 'chan' 'tag' 'rmflatsec' 'tooltipstring', wordwrap('If a channel has a longer flatline than this, it will be removed. In seconds.',80)} ...
         ...
@@ -94,10 +103,18 @@ if nargin < 2
     end
     
     row   = [0.1 1 0.3];
+    row4  = [0.1 0.8 0.2 0.3];
     row2  = [0.1 1.2 0.1];
     row3  = [0.9 0.2 0.3];
-    geom =     { row3 1 row     1   1 row     row     row     1   1 row     row2 row2   1   1 row  row     1   1 };
-    geomvert = [ 1 1 1       0.3 1 1       1       1       0.3 1 1       1    1      0.3 1 1    1       0.3 1 ];
+    geom =     { 1 row     1   1 row4 row4 row     row     row     1   1 row     row2 row2   1   1 row  row     1   1 };
+    geomvert = [ 1 1       0.3 1 1    1    1       1       1       0.3 1 1       1    1      0.3 1 1    1       0.3 1 ];
+
+    if length(EEG) > 1
+        uilist = { uilist{1:6} {} {'style' 'checkbox' 'string' 'Fuse channel rejection for datasets with same subject and session' 'userdata' 'chan' 'fontweight' 'bold' 'tag' 'commonrej' 'value' 1} {} uilist{7:end} };
+        geom = [ geom(1:4) { row2 } geom(5:end)];
+        geomvert = [ geomvert(1:4) 1 geomvert(5:end) ];
+    end
+
     [res,~,~,outs] = inputgui('title', 'pop_clean_rawdata()', 'geomvert', geomvert, 'geometry', geom, 'uilist',uilist, 'helpcom', 'pophelp(''clean_artifacts'');', 'userdata', tmpchanlocs);
 
     % Return error if no input.
@@ -118,6 +135,16 @@ if nargin < 2
     if outs.filter, opt.Highpass = str2num(outs.filterfreqs); end
     
     if outs.chanrm
+        if outs.chanignoreflag
+            [ chaninds, chanlist ] = eeg_decodechan(EEG(1).chanlocs, outs.chanignore);
+            if isempty(chanlist), chanlist = chaninds; end
+            opt.channels_ignore = chanlist; 
+        end
+        if outs.chanuseflag
+           [ chaninds, chanlist ] = eeg_decodechan(EEG(1).chanlocs, outs.chanuse);
+           if isempty(chanlist), chanlist = chaninds; end
+           opt.channels = chanlist;
+        end
         if outs.rmflat, opt.FlatlineCriterion = str2num(outs.rmflatsec); end
         if outs.rmcorr, opt.ChannelCriterion  = str2num(outs.rmcorrval); end
         if outs.rmnoise, opt.LineNoiseCriterion = str2num(outs.rmnoiseval); end
@@ -135,12 +162,11 @@ if nargin < 2
     if outs.asrrej && ~strcmpi(opt.BurstCriterion, 'off')
         opt.BurstRejection = 'on';
     end
-    if ~strcmpi(outs.channels, 'all')
-       [ chaninds, chanlist ] = eeg_decodechan(EEG(1).chanlocs, outs.channels);
-       if isempty(chanlist), chanlist = chaninds; end
-       opt.channels = chanlist;
+    if outs.commonrej
+        opt.fusechanrej = outs.commonrej;
+        fusechanrej = true;
     end
-    
+
     % convert structure to cell
     options = fieldnames(opt);
     options(:,2) = struct2cell(opt);
@@ -148,6 +174,11 @@ if nargin < 2
     options = options(:)';
 else
     options = varargin;
+    for iOpt = 1:2:length(options)
+        if strcmpi(options{iOpt}, 'fusechanrej')
+            fusechanrej = true;
+        end
+    end
 end
 
 if length(EEG) > 1
@@ -156,6 +187,13 @@ if length(EEG) > 1
         [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'warning', 'on', 'params', options );
     else
         [ EEG, com ] = eeg_eval( 'clean_artifacts', EEG, 'params', options );
+    end
+    if fusechanrej
+        if exist('pop_fusechanrej')
+            EEG = pop_fusechanrej(EEG);
+        else
+            warning('Upgrade your version of EEGLAB to fuse channel rejection for datasets with same subject and session');
+        end
     end
     return;
 end

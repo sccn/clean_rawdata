@@ -181,7 +181,9 @@ hlp_varargin2struct(varargin,...
     {'chancorr_crit','ChannelCorrelationCriterion','ChannelCriterion'}, 0.8, ...
     {'line_crit','LineNoiseCriterion'}, 4, ...
     {'burst_crit','BurstCriterion'}, 5, ...
+    {'fusechanrej','Fusechanrej'}, [], ... % unused in this function
     {'channels','Channels'}, [], ...
+    {'channels_ignore','Channels_ignore'}, [], ...
     {'window_crit','WindowCriterion'}, 0.25, ...
     {'num_samples','NumSamples'}, 50, ...
     {'highpass_band','Highpass'}, [0.25 0.75], ...
@@ -208,6 +210,23 @@ if ~isempty(channels)
     end
     oriEEG = EEG;
     EEG = pop_select(EEG, 'channel', channels);
+end
+if ~isempty(channels)
+    if ~isempty(channels_ignore)
+        error('Can include or ignore channel but not both at the same time')
+    end
+    if ~iscell(channels)
+        error('Cannot exclude channels without channel labels')
+    end
+    oriEEG = EEG;
+    EEG = pop_select(EEG, 'channel', channels);
+end
+if ~isempty(channels_ignore)
+    if ~iscell(channels_ignore)
+        error('Cannot exclude channels without channel labels')
+    end
+    oriEEG = EEG;
+    EEG = pop_select(EEG, 'nochannel', channels_ignore);
 end
 
 % remove flat-line channels
@@ -276,7 +295,7 @@ end
 disp('Use vis_artifacts to compare the cleaned data to the original.');
 
 % add back original channels
-if ~isempty(channels)
+if ~isempty(channels) || ~isempty(channels_ignore)
    
     % Apply same transformation to the data before removal of channels and data
     EEG = eeg_checkset(EEG, 'eventconsistency');
