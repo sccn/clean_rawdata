@@ -162,7 +162,7 @@ if nargin < 2
     if outs.asrrej && ~strcmpi(opt.BurstCriterion, 'off')
         opt.BurstRejection = 'on';
     end
-    if outs.commonrej
+    if isfield(outs,'commonrej') && outs.commonrej
         opt.fusechanrej = outs.commonrej;
         fusechanrej = true;
     end
