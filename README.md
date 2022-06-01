@@ -4,6 +4,10 @@ The Clean Rawdata plug-in (version 2.0) interface has been redesigned and will s
 
 **Note:** This plug-in uses the Signal Processing toolbox for pre- and post-processing of the data (removing drifts, channels and time windows); the core ASR method (clean_asr) does not require this toolbox but you will need high-pass filtered data if you use it directly.
 
+# This project needs you
+
+We need community maintain to this project. Please review existing issues and issue pull requests. A section in this documentation with link to all the existing methodological papers is also needed.
+
 # Credit
 
 This plug-in, clean_rawdata uses methods (e.g., Artifact Subspace 
