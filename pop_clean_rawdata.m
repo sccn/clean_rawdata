@@ -215,7 +215,7 @@ if nargin < 2 && outs.vis == 1
     try
         vis_artifacts(cleanEEG,EEG);
     catch
-        warning('vis_artifacts failed. Skipping visualization.')
+        warning('vis_artifacts failed. Skipping visualization. Could be because of duplicate channel label.')
     end
 end
 
