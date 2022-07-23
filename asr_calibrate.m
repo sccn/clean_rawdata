@@ -184,6 +184,9 @@ M = sqrtm(real(reshape(block_geometric_median(U/blocksize),C,C)));
 
 % window length for calculating thresholds
 N = round(window_len*srate);
+if S < N
+    error('No enough reference data, call the function from the command line and try changing the ''BurstCriterionRefTolerances'' parameters (to -10 to 10 for example)')
+end
 
 % get the threshold matrix T
 fprintf('Determining per-component thresholds...');
