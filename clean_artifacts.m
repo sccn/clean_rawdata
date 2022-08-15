@@ -231,11 +231,13 @@ end
 
 % remove flat-line channels
 if ~strcmp(flatline_crit,'off')
+    disp('Detecting flat line...')
     EEG = clean_flatlines(EEG,flatline_crit); 
 end
 
 % high-pass filter the data
 if ~strcmp(highpass_band,'off')
+    disp('Applying highpass filter...')
     EEG = clean_drifts(EEG,highpass_band); 
 end
 if nargout > 1
