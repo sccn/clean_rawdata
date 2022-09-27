@@ -129,7 +129,11 @@ data(~isfinite(data(:))) = 0;
 
 % split up the total sample range into k chunks that will fit in memory
 if maxmem*1024*1024 - C*C*P*8*3 < 0
-    error('Not enough memory');
+    disp('Memory too low, increasing it...');
+    maxmem = hlp_memfree/(2^21);
+    if maxmem*1024*1024 - C*C*P*8*3 < 0
+	error('Not enough memory');
+    end
 end
 splits = ceil((C*C*S*8*8 + C*C*8*S/stepsize + C*S*8*2 + S*8*5) / (maxmem*1024*1024 - C*C*P*8*3)); % Mysterious. More memory available, less 'splits'
 if splits > 1
