@@ -129,7 +129,7 @@ data(~isfinite(data(:))) = 0;
 
 % split up the total sample range into k chunks that will fit in memory
 if maxmem*1024*1024 - C*C*P*8*3 < 0
-    disp('Memory too low, increasing it...');
+    disp('Memory too low, increasing it (rejection block size now depends on available memory so it might not be 100% reproducible)...');
     maxmem = hlp_memfree/(2^21);
     if maxmem*1024*1024 - C*C*P*8*3 < 0
 	error('Not enough memory');
