@@ -267,11 +267,16 @@ if ~strcmp(burst_crit,'off')
 
     if strcmp(burst_rejection,'on')
         % portion of data which have changed
-        sample_mask = sum(abs(EEG.data-BUR.data),1) < 1e-10;
+        sample_mask = sum(abs(EEG.data-BUR.data),1) < 1e-8;
 
         % find latency of regions
         retain_data_intervals = reshape(find(diff([false sample_mask false])),2,[])';
         retain_data_intervals(:,2) = retain_data_intervals(:,2)-1;
+
+        if ~isempty(retain_data_intervals)
+            smallIntervals = diff(retain_data_intervals')' < 5;
+            retain_data_intervals(smallIntervals,:) = [];
+        end
 
         % reject regions
         EEG = pop_select(EEG, 'point', retain_data_intervals);
@@ -282,7 +287,8 @@ if ~strcmp(burst_crit,'off')
 end
 
 if nargout > 2
-    BUR = EEG; end
+    BUR = EEG; 
+end
 
 % remove irrecoverable time windows based on power
 if ~strcmp(window_crit,'off') && ~strcmp(window_crit_tolerances,'off')
