@@ -195,6 +195,7 @@ if length(EEG) > 1
             warning('Upgrade your version of EEGLAB to fuse channel rejection for datasets with same subject and session');
         end
     end
+    com = sprintf('EEG = pop_clean_rawdata(EEG, %s);', vararg2str(options));
     return;
 end
 
