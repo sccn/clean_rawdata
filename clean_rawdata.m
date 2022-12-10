@@ -1,4 +1,4 @@
-% clean_rawdata(): a wrapper for EEGLAB to call Christian's clean_artifacts.
+% clean_rawdata(): a wrapper for EEGLAB to call clean_artifacts function
 %
 % Usage:
 %   >>  EEG = clean_rawdata(EEG, arg_flatline, arg_highpass, arg_channel, arg_noisy, arg_burst, arg_window)
