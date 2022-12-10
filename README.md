@@ -87,3 +87,5 @@ v2.5 - move asr_calibrate out of the private folder so it can be used directly
 v2.6 - allowing to exclude channels and a variety of small bug fixes
 
 v2.7 - allowing to fuse channel rejection for datasets with same subject and session (STUDY processing)
+
+v2.8 - better error messages, and fix excluding channels (there was a rare crash)
