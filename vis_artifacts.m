@@ -207,6 +207,7 @@ set(hFig, 'ResizeFcn', @on_window_resized);
         pos = floor((size(new.data,2)-wndsamples)*relPos);
         wndindices = 1 + floor(0:wndsamples/pixels:(wndsamples-1));
         wndrange = pos+wndindices;
+        wndrange(wndrange > length(old.data)) = length(old.data);
         
         oldwnd = old.data(:,wndrange);
         newwnd = new.data(:,wndrange);
