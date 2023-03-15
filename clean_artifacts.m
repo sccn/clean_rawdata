@@ -221,6 +221,7 @@ if ~isempty(channels_ignore)
     end
     oriEEG = EEG;
     EEG = pop_select(EEG, 'nochannel', channels_ignore);
+    oriEEG_without_ignored_channels = EEG;
     EEG.event = []; % will be added back later
 end
 
@@ -240,6 +241,7 @@ if nargout > 1
 end
 
 % remove noisy channels by correlation and line-noise thresholds
+removed_channels = [];
 if ~strcmp(chancorr_crit,'off') || ~strcmp(line_crit,'off') %#ok<NODEF>
     if strcmp(chancorr_crit,'off')
         chancorr_crit = 0; end
@@ -299,7 +301,10 @@ disp('Use vis_artifacts to compare the cleaned data to the original.');
 
 % add back original channels
 if ~isempty(channels) || ~isempty(channels_ignore)
-   
+    if ~isempty(removed_channels)
+        removed_channels = { oriEEG_without_ignored_channels.chanlocs(removed_channels).labels };
+    end
+
     % Apply same transformation to the data before removal of channels and data
     EEG = eeg_checkset(EEG, 'eventconsistency');
     if ~isempty(EEG.event) && isfield(EEG.event, 'type') && isstr(EEG.event(1).type)
@@ -326,6 +331,9 @@ if ~isempty(channels) || ~isempty(channels_ignore)
         oriEEG.pnts = EEG.pnts;
 
         EEG = oriEEG;
+        if ~isempty(removed_channels)
+            EEG = pop_select(EEG, 'rmchannel', removed_channels);
+        end
     end
     
 end
