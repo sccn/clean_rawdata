@@ -275,8 +275,12 @@ if ~strcmp(burst_crit,'off')
         retain_data_intervals = reshape(find(diff([false sample_mask false])),2,[])';
         retain_data_intervals(:,2) = retain_data_intervals(:,2)-1;
 
+        % remove small intervals
         if ~isempty(retain_data_intervals)
             smallIntervals = diff(retain_data_intervals')' < 5;
+            for iInterval = find(smallIntervals)'
+                sample_mask(retain_data_intervals(iInterval,1):retain_data_intervals(iInterval,2)) = 0;
+            end
             retain_data_intervals(smallIntervals,:) = [];
         end
 
