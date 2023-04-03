@@ -187,7 +187,7 @@ M = sqrtm(real(reshape(med,C,C)));
 % window length for calculating thresholds
 N = round(window_len*srate);
 if S < N
-    error('No enough reference data, call the function from the command line and try changing the ''BurstCriterionRefTolerances'' parameters (to -10 to 10 for example)')
+    error('No enough reference data, call the function from the command line and try changing the ''BurstCriterionRefTolerances'' parameters')
 end
 
 % get the threshold matrix T
