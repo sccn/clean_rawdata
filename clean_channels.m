@@ -73,12 +73,12 @@ subset_size = round(subset_size*size(signal.data,1));
 if max_broken_time > 0 && max_broken_time < 1  %#ok<*NODEF>
     max_broken_time = size(signal.data,2)*max_broken_time;
 else
-    max_broken_time = signal.srate*max_broken_time;
+    max_broken_time = round(signal.srate)*max_broken_time;
 end
 
 signal.data = double(signal.data);
 [C,S] = size(signal.data);
-window_len = window_len*signal.srate;
+window_len = window_len*round(signal.srate);
 wnd = 0:window_len-1;
 offsets = 1:window_len:S-window_len;
 W = length(offsets);
