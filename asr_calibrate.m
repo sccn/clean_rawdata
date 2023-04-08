@@ -199,6 +199,9 @@ for c = C:-1:1
     rms = X(:,c).^2;
     rms = sqrt(sum(rms(bsxfun(@plus,round(1:N*(1-window_overlap):S-N),(0:N-1)')))/N);
     % fit a distribution to the clean part
+    if length(rms) == 1
+        error('No enough reference data, call the function from the command line and try changing the ''BurstCriterionRefTolerances'' parameters')
+    end
     [mu(c),sig(c)] = fit_eeg_distribution(rms,min_clean_fraction,max_dropout_fraction);
 end
 T = diag(mu + cutoff*sig)*V';
