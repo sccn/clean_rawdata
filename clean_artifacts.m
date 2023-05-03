@@ -241,6 +241,8 @@ if nargout > 1
 end
 
 % remove noisy channels by correlation and line-noise thresholds
+oldSrate = EEG.srate;
+EEG.srate = round(EEG.srate);
 removed_channels = [];
 if ~strcmp(chancorr_crit,'off') || ~strcmp(line_crit,'off') %#ok<NODEF>
     if strcmp(chancorr_crit,'off')
@@ -291,6 +293,7 @@ if ~strcmp(burst_crit,'off')
         EEG = BUR;
     end
 end
+EEG.srate = oldSrate;
 
 if nargout > 2
     BUR = EEG; 

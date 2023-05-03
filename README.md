@@ -91,3 +91,5 @@ v2.7 - allowing to fuse channel rejection for datasets with same subject and ses
 v2.8 - better error messages, and fix excluding channels (there was a rare crash)
 
 v2.9 - fix bug when ignoring channels and removing channels at the same time, fix plotting issue with vis_artifact
+
+v2.91 - add support for fractional sampling rate; fix too many splits with high sampling frequencies

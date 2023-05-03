@@ -136,6 +136,9 @@ if maxmem*1024*1024 - C*C*P*8*3 < 0
     end
 end
 splits = ceil((C*C*S*8*8 + C*C*8*S/stepsize + C*S*8*2 + S*8*5) / (maxmem*1024*1024 - C*C*P*8*3)); % Mysterious. More memory available, less 'splits'
+        % there is something wrong with the formula above (1.6M splits for
+        % subject 2252A of ds003947; capping at 10000 below)
+splits = min(splits, 10000);
 if splits > 1
     fprintf('Now cleaning data in %i blocks',splits); end
 
