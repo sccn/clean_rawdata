@@ -266,7 +266,12 @@ if ~strcmp(burst_crit,'off')
     if ~strcmpi(distance2, 'euclidian')    
         BUR = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[], [], true, max_mem); 
     else
-        BUR = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[], [], false, max_mem); 
+        try
+            BUR = clean_asr(EEG,burst_crit,[],[],[],burst_crit_refmaxbadchns,burst_crit_reftolerances,[], [], false, max_mem); 
+        catch
+            lasterr
+            return
+        end
     end
 
     if strcmp(burst_rejection,'on')
