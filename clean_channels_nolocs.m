@@ -137,7 +137,7 @@ elseif any(removed_channels)
         signal.nbchan = size(signal.data,1);
         [signal.icawinv,signal.icasphere,signal.icaweights,signal.icaact,signal.stats,signal.specdata,signal.specicaact] = deal([]);
     end
-    if isfield(signal.etc,'clean_channel_mask')
+    if isfield(signal.etc,'clean_channel_mask') && sum(signal.etc.clean_channel_mask) == length(removed_channels)
         signal.etc.clean_channel_mask(signal.etc.clean_channel_mask) = ~removed_channels;
     else
         signal.etc.clean_channel_mask = ~removed_channels;
