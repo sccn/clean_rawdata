@@ -37,7 +37,7 @@ function [EEG, com] = pop_clean_rawdata(EEG, varargin)
 
 % Check input
 com = '';
-if size(EEG(1).data) == 3
+if ndims(EEG(1).data) == 3
     error('Input data must be continuous. This data seems epoched.')
 end
 
