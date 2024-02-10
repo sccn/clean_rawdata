@@ -294,6 +294,15 @@ if ~strcmp(burst_crit,'off')
         % reject regions
         EEG = pop_select(EEG, 'point', retain_data_intervals);
         EEG.etc.clean_sample_mask = sample_mask;
+
+        % check
+        try
+            res = checksamples(EEG);
+            if res.CleanBoundaryMatch == 0
+                fprintf(2, 'Your data is fine, but upon double checking the removed portions of data, there is\n');
+                fprintf(2, 'a small discrepency; if you can reproduce the warning message, send us your dataset.\n');
+            end
+        catch, end
     else
         EEG = BUR;
     end
@@ -350,4 +359,31 @@ if ~isempty(channels) || ~isempty(channels_ignore)
     
 end
 
+%creates a structure summarizing if Assumptions 2 and 4 are true or false
+%for each dataset in my study
+function CleanSampleMismatch = check_rm_samples(EEG)
+
+CleanSampleMismatch.oldLength = length(EEG.etc.clean_sample_mask);
+CleanSampleMismatch.newLength = EEG.pnts;
+CleanSampleMismatch.maskSum = sum(EEG.etc.clean_sample_mask);
+
+if EEG.pnts ~= sum(EEG.etc.clean_sample_mask)    %tests Assumption 2
+    CleanSampleMismatch.CleanMaskMatch = 0;
+else
+    CleanSampleMismatch.CleanMaskMatch = 1;
+end
+
+CleanSampleMismatch.boundaryDuration = 0;
+for j = 1: length(EEG.event)                 %finds total duration of boundary events
+    if strcmp(EEG.event(j).type, 'boundary')
+        CleanSampleMismatch.boundaryDuration = CleanSampleMismatch.boundaryDuration + EEG.event(j).duration;
+    end
+end
+CleanSampleMismatch.nonBoundaryLength = length(EEG.etc.clean_sample_mask) - CleanSampleMismatch.boundaryDuration;
+
+if EEG.pnts ~= CleanSampleMismatch.nonBoundaryLength %tests Assumption 4
+    CleanSampleMismatch.CleanBoundaryMatch = 0;
+else
+    CleanSampleMismatch.CleanBoundaryMatch = 1;
+end
 
