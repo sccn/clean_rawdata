@@ -213,6 +213,7 @@ if ~isempty(channels)
     end
     oriEEG = EEG;
     EEG = pop_select(EEG, 'channel', channels);
+    oriEEG_without_ignored_channels = EEG;
     EEG.event = []; % will be added back later
 end
 if ~isempty(channels_ignore)
