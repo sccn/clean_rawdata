@@ -46,7 +46,7 @@ wnd = design_kaiser(transition(1),transition(2),attenuation,true);
 B = design_fir(length(wnd)-1,[0 transition 1],[0 0 1 1],[],wnd);
 
 % apply it, channel by channel to save memory
-signal.data = signal.data';
+signal.data = signal.data(:,:)';
 for c=1:signal.nbchan
     signal.data(:,c) = filtfilt_fast(B,1,signal.data(:,c)); end
 signal.data = signal.data';
