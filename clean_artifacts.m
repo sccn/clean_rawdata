@@ -32,7 +32,7 @@ function [EEG,HP,BUR,removed_channels] = clean_artifacts(EEG,varargin)
 %                      value to an estimate based on other channels, it is considered abnormal in
 %                      the given time window. This method requires that channel locations are
 %                      available and roughly correct; otherwise a fallback criterion will be used.
-%                      (default: 0.85)
+%                      (default: 0.8)
 %
 %   LineNoiseCriterion : If a channel has more line noise relative to its signal than this value, in
 %                        standard deviations based on the total channel population, it is considered

@@ -30,6 +30,8 @@ if ( nargin < 5 || isempty(type)) type='spline'; end;
 if ( nargin < 6 || isempty(tol) ) tol=eps; end;
 
 % map the positions onto the sphere (not using repop, by JMH)
+src  = double(src);
+dest = double(dest);
 src  = src ./repmat(sqrt(sum(src.^2)),  size(src, 1), 1);  % src   = repop(src,'./',sqrt(sum(src.^2)));
 dest = dest./repmat(sqrt(sum(dest.^2)), size(dest, 1), 1); % dest  = repop(dest,'./',sqrt(sum(dest.^2)));
 
