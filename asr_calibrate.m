@@ -114,6 +114,7 @@ function state = asr_calibrate(X,srate,cutoff,blocksize,B,A,window_len,window_ov
 
 if nargin < 3 || isempty(cutoff)
     cutoff = 5; end
+cutoff = double(cutoff);
 if nargin < 4 || isempty(blocksize)
     blocksize = 10; end
 
