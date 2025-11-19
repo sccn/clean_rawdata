@@ -343,19 +343,20 @@ if ~isempty(channels) || ~isempty(channels_ignore)
             boundloc = [ boundloc; boundloc+dur-1]';
             oriEEG = eeg_eegrej(oriEEG, ceil(boundloc));
         end
+    end
+    EEG.event = oriEEG.event;
 
-        % copy clean data to oriEEG (in case data was corrected
-        [~,chanInds1, chanInds2] = intersect({ oriEEG.chanlocs.labels }, { EEG.chanlocs.labels });
-        if size(oriEEG.data,2) ~= size(EEG.data,2)
-            error('Issue with adding back removed channels. Remove channels, then remove bad portions of data.');
-        end
-        oriEEG.data(chanInds1,:) = EEG.data(chanInds2,:);
-        oriEEG.pnts = EEG.pnts;
+    % copy clean data to oriEEG (in case data was corrected
+    [~,chanInds1, chanInds2] = intersect({ oriEEG.chanlocs.labels }, { EEG.chanlocs.labels });
+    if size(oriEEG.data,2) ~= size(EEG.data,2)
+        error('Issue with adding back removed channels. Remove channels, then remove bad portions of data.');
+    end
+    oriEEG.data(chanInds1,:) = EEG.data(chanInds2,:);
+    oriEEG.pnts = EEG.pnts;
 
-        EEG = oriEEG;
-        if ~isempty(removed_channels)
-            EEG = pop_select(EEG, 'rmchannel', removed_channels);
-        end
+    EEG = oriEEG;
+    if ~isempty(removed_channels)
+        EEG = pop_select(EEG, 'rmchannel', removed_channels);
     end
     
 end

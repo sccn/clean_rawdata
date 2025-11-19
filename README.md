@@ -95,3 +95,6 @@ v2.9 - fix bug when ignoring channels and removing channels at the same time, fi
 v2.9.1 - add support for fractional sampling rate; fix too many splits with high sampling frequencies
 
 v2.10 - The code was updated to avoid crashes and fix minor errors related to channel masking, array dimensions, and ignoring channels.
+
+v2.11 - Fix issues when ignoring channels (and not removing portions of data); convert more variables to double precision
+
