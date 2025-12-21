@@ -185,12 +185,25 @@ P = horzcat(rand_samples{:});
 
 
 function Y = randsample(X,num)
-Y = [];
-while length(Y)<num
-    pick = round(1 + (length(X)-1).*rand());
-    Y(end+1) = X(pick);
-    X(pick) = [];
+% Optimized O(n) Fisher-Yates partial shuffle (matches Python rand_sample)
+% Previous O(n^2) implementation with deletion replaced for performance
+n = length(X);
+pool = X;  % Copy to avoid modifying input
+
+for k = 1:num
+    % Choose from remaining elements (k to n)
+    remaining = n - (k - 1);
+    choice = round((remaining - 1) * rand());  % 0 to remaining-1
+
+    % Swap pool(k) with pool(k + choice)
+    idx = k + choice;
+    temp = pool(k);
+    pool(k) = pool(idx);
+    pool(idx) = temp;
 end
+
+% Return first num elements
+Y = pool(1:num);
 % 
 % function Y = randsample(X,num,stream)
 % Y = [];
