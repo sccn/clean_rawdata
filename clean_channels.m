@@ -100,12 +100,15 @@ else
     noise_mask = false(C,1)'; % transpose added. Otherwise gives an error below at removed_channels = removed_channels | noise_mask';  (by Ozgur Balkan)
 end
 
-if ~(isfield(signal.chanlocs,'X') && isfield(signal.chanlocs,'Y') && isfield(signal.chanlocs,'Z') && all([length([signal.chanlocs.X]),length([signal.chanlocs.Y]),length([signal.chanlocs.Z])] > length(signal.chanlocs)*0.5))
+if ~(isfield(signal.chanlocs,'X') && isfield(signal.chanlocs,'Y') && isfield(signal.chanlocs,'Z'))
     error('clean_channels:bad_chanlocs','To use this function most of your channels should have X,Y,Z location measurements.'); end
 
 % get the matrix of all channel locations [3xN]
 [x,y,z] = deal({signal.chanlocs.X},{signal.chanlocs.Y},{signal.chanlocs.Z});
-usable_channels = find(~cellfun('isempty',x) & ~cellfun('isempty',y) & ~cellfun('isempty',z));
+is_valid_coord = @(v) isnumeric(v) && isscalar(v) && isfinite(v);
+usable_channels = find(cellfun(is_valid_coord,x) & cellfun(is_valid_coord,y) & cellfun(is_valid_coord,z));
+if length(usable_channels) <= length(signal.chanlocs)*0.5
+    error('clean_channels:bad_chanlocs','To use this function most of your channels should have X,Y,Z location measurements.'); end
 locs = [cell2mat(x(usable_channels));cell2mat(y(usable_channels));cell2mat(z(usable_channels))];
 X = X(:,usable_channels);
   
