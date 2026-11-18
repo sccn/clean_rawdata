@@ -253,12 +253,12 @@ if ~strcmp(chancorr_crit,'off') || ~strcmp(line_crit,'off') %#ok<NODEF>
     try 
         [EEG,removed_channels] = clean_channels(EEG,chancorr_crit,line_crit,[],channel_crit_maxbad_time, num_samples); 
     catch e
-%         if strcmp(e.identifier,'clean_channels:bad_chanlocs')
+        if strcmp(e.identifier,'clean_channels:bad_chanlocs')
             disp('Your dataset appears to lack correct channel locations; using a location-free channel cleaning method.');
             [EEG,removed_channels] = clean_channels_nolocs(EEG,nolocs_channel_crit,nolocs_channel_crit_excluded,[],channel_crit_maxbad_time); 
-%         else
-%             rethrow(e);
-%         end
+        else
+            rethrow(e);
+        end
     end
 end
 
